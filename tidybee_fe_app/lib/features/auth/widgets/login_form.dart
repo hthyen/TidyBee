@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:tidybee_fe_app/core/theme/app_colors.dart';
 
 class LoginForm extends StatefulWidget {
@@ -50,7 +51,7 @@ class _LoginFormState extends State<LoginForm> {
     //       );
 
     //       if (user.role == "CUSTOMER") {
-    //         context.go("/home-page", extra: user.token);
+    // context.go("/home-page", extra: user.token);
     //       }
 
     //       if (user.role == "RESTAURANT_OWNER") {
@@ -72,6 +73,7 @@ class _LoginFormState extends State<LoginForm> {
     //     }
     //   }
     // }
+    context.go("/customer-homepage");
   }
 
   @override
