@@ -1,4 +1,8 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
+import 'package:tidybee_fe_app/features/customer/widgets/profile_widgets/profile_menu_item.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:go_router/go_router.dart';
+import 'package:tidybee_fe_app/core/theme/app_colors.dart';
 
 class CustomerProfileScreen extends StatefulWidget {
   final String token;
@@ -10,8 +14,133 @@ class CustomerProfileScreen extends StatefulWidget {
 }
 
 class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
+  // Mock data (sau này có thể thay bằng API call)
+  String name = 'Esther Howard';
+  String email = 'esther.howard@email.com';
+  String avatarUrl = 'https://i.pravatar.cc/150?img=47';
+
+  Future<void> _logout(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token');
+
+    if (!mounted) return;
+
+    context.go('/login');
+  }
+
   @override
   Widget build(BuildContext context) {
-    return SafeArea(child: Text("hồ sơ"));
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Tài khoản'),
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          color: AppColors.primary,
+          onPressed: () => context.go('/customer-homepage'),
+        ),
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            const SizedBox(height: 20),
+
+            // Avatar
+            CircleAvatar(radius: 45, backgroundImage: NetworkImage(avatarUrl)),
+            const SizedBox(height: 12),
+
+            // Name + Email
+            Text(
+              name,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
+            ),
+            const SizedBox(height: 4),
+            Text(email, style: TextStyle(color: Colors.grey[600])),
+            const SizedBox(height: 12),
+
+            // Edit Profile Button
+            ElevatedButton.icon(
+              onPressed: () {
+                context.push('/customer-profile/edit');
+              },
+              icon: const Icon(Icons.edit, size: 18),
+              label: const Text('Chỉnh sửa hồ sơ'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 10,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+            const Divider(thickness: 0.8),
+
+            // Menu items
+            Expanded(
+              child: ListView(
+                children: [
+                  ProfileMenuItem(
+                    icon: Icons.person_outline,
+                    iconColor: AppColors.primary,
+                    title: 'Hồ sơ cá nhân',
+                    onTap: () => context.push('/customer-profile/edit'),
+                  ),
+                  ProfileMenuItem(
+                    icon: Icons.location_on_outlined,
+                    iconColor: AppColors.primary,
+                    title: 'Địa chỉ của tôi',
+                    onTap: () => context.push('/customer-profile/address'),
+                  ),
+                  ProfileMenuItem(
+                    icon: Icons.credit_card_outlined,
+                    iconColor: AppColors.primary,
+                    title: 'Phương thức thanh toán',
+                    onTap: () => context.push('/customer-profile/payment'),
+                  ),
+                  ProfileMenuItem(
+                    icon: Icons.account_balance_wallet_outlined,
+                    iconColor: AppColors.primary,
+                    title: 'Ví của tôi',
+                    onTap: () => context.push('/customer-profile/wallet'),
+                  ),
+                  ProfileMenuItem(
+                    icon: Icons.local_offer_outlined,
+                    iconColor: AppColors.primary,
+                    title: 'Mã giảm giá của tôi',
+                    onTap: () => context.push('/customer-profile/voucher'),
+                  ),
+                  ProfileMenuItem(
+                    icon: Icons.help_outline,
+                    iconColor: AppColors.primary,
+                    title: 'Trợ giúp & Hỗ trợ',
+                    onTap: () {
+                      // Bạn có thể thêm 1 route support sau này
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Chức năng đang phát triển'),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(thickness: 0.8),
+                  ProfileMenuItem(
+                    icon: Icons.logout,
+                    title: 'Đăng xuất',
+                    iconColor: Colors.red,
+                    isLogout: true,
+                    onTap: () => _logout(context),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

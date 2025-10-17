@@ -7,6 +7,11 @@ import 'package:tidybee_fe_app/features/customer/screens/customer_chat/customer_
 import 'package:tidybee_fe_app/features/customer/screens/customer_bottom_navigate.dart';
 import 'package:tidybee_fe_app/features/customer/screens/customer_home/customer_home_screen.dart';
 import 'package:tidybee_fe_app/features/customer/screens/customer_profile/customer_profile_screen.dart';
+import 'package:tidybee_fe_app/features/customer/screens/customer_profile/edit_profile_screen.dart';
+import 'package:tidybee_fe_app/features/customer/screens/customer_profile/address_screen.dart';
+import 'package:tidybee_fe_app/features/customer/screens/customer_profile/payment_method_screen.dart';
+import 'package:tidybee_fe_app/features/customer/screens/customer_profile/wallet_screen.dart';
+import 'package:tidybee_fe_app/features/customer/screens/customer_profile/voucher_screen.dart';
 import 'package:tidybee_fe_app/features/not_found/not_found_page.dart';
 import '../../features/auth/screens/forgot_password_screen.dart';
 import '../../features/auth/screens/otp_verification_screen.dart';
@@ -16,7 +21,7 @@ class AppRouter {
   static final _rootCustomerNavigatorKey = GlobalKey<NavigatorState>();
 
   static final GoRouter router = GoRouter(
-    initialLocation: "/login",
+    initialLocation: "/customer-homepage",
     debugLogDiagnostics: true, //console router
     routes: [
       // ================= AUTH =================
@@ -126,6 +131,33 @@ class AppRouter {
 
               return CustomerProfileScreen(token: token);
             },
+            routes: [
+              GoRoute(
+                path: "edit",
+                name: "edit-profile",
+                builder: (context, state) => const EditProfileScreen(),
+              ),
+              GoRoute(
+                path: "address",
+                name: "address",
+                builder: (context, state) => const AddressScreen(),
+              ),
+              GoRoute(
+                path: "payment",
+                name: "payment-method",
+                builder: (context, state) => const PaymentMethodScreen(),
+              ),
+              GoRoute(
+                path: "wallet",
+                name: "wallet",
+                builder: (context, state) => const WalletScreen(),
+              ),
+              GoRoute(
+                path: "voucher",
+                name: "voucher",
+                builder: (context, state) => const VoucherScreen(),
+              ),
+            ],
           ),
         ],
       ),
