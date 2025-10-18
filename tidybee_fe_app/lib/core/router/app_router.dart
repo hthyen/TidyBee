@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tidybee_fe_app/features/auth/screens/login_screen.dart';
@@ -6,6 +7,7 @@ import 'package:tidybee_fe_app/features/customer/screens/customer_booking/custom
 import 'package:tidybee_fe_app/features/customer/screens/customer_chat/customer_chat_screen.dart';
 import 'package:tidybee_fe_app/features/customer/screens/customer_bottom_navigate.dart';
 import 'package:tidybee_fe_app/features/customer/screens/customer_home/customer_home_screen.dart';
+import 'package:tidybee_fe_app/features/customer/screens/customer_home/customer_services_detail_screen/customer_services_detail_screen.dart';
 import 'package:tidybee_fe_app/features/customer/screens/customer_profile/customer_profile_screen.dart';
 import 'package:tidybee_fe_app/features/customer/screens/customer_profile/edit_profile_screen.dart';
 import 'package:tidybee_fe_app/features/customer/screens/customer_profile/address_screen.dart';
@@ -170,6 +172,22 @@ class AppRouter {
             ],
           ),
         ],
+      ),
+
+      GoRoute(
+        path: "/customer-service-detail",
+        name: "customer-service-detail",
+        builder: (context, state) {
+          // Lấy dữ liệu từ state.extra
+          if (state.extra is Map<String, dynamic>) {
+            final data = state.extra as Map<String, dynamic>;
+            final String title = data["title"] ?? "Dịch vụ";
+            final IconData icon = data["icon"] ?? "";
+
+            return CustomerServicesDetailScreen(title: title, icon: icon);
+          }
+          return const NotFoundPage();
+        },
       ),
 
       // ================= HELPER =================

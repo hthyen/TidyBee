@@ -131,7 +131,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                 const SizedBox(height: 4),
 
                 Text(
-                  customer!.email ?? "Không thấy email",
+                  customer.email ?? "Không thấy email",
                   style: TextStyle(color: Colors.grey[600]),
                 ),
 
