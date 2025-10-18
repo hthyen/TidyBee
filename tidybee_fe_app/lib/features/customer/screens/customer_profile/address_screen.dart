@@ -12,12 +12,19 @@ class AddressScreen extends StatelessWidget {
     ];
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Địa chỉ của tôi'), centerTitle: true),
+      // Appbar
+      appBar: AppBar(
+        title: const Text('Địa chỉ của tôi'),
+        centerTitle: true,
+        backgroundColor: AppColors.primary,
+      ),
+
       body: ListView.separated(
         padding: const EdgeInsets.all(16),
         itemCount: addresses.length,
         separatorBuilder: (_, __) => const Divider(),
         itemBuilder: (context, index) {
+          // List of address
           return ListTile(
             leading: const Icon(Icons.location_on_outlined, color: Colors.red),
             title: Text(addresses[index]),
@@ -28,6 +35,8 @@ class AddressScreen extends StatelessWidget {
           );
         },
       ),
+
+      // Button add address
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.primary,
         onPressed: () {},

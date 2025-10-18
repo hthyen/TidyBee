@@ -31,15 +31,13 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // Appbar
       appBar: AppBar(
         title: const Text('Tài khoản'),
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          color: AppColors.primary,
-          onPressed: () => context.go('/customer-homepage'),
-        ),
+        backgroundColor: AppColors.primary,
       ),
+
       body: SafeArea(
         child: Column(
           children: [
@@ -78,42 +76,55 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
             ),
 
             const SizedBox(height: 20),
+
+            // Divider
             const Divider(thickness: 0.8),
 
             // Menu items
             Expanded(
               child: ListView(
                 children: [
+                  // Edit profile
                   ProfileMenuItem(
                     icon: Icons.person_outline,
                     iconColor: AppColors.primary,
                     title: 'Hồ sơ cá nhân',
                     onTap: () => context.push('/customer-profile/edit'),
                   ),
+
+                  // Edit address
                   ProfileMenuItem(
                     icon: Icons.location_on_outlined,
                     iconColor: AppColors.primary,
                     title: 'Địa chỉ của tôi',
                     onTap: () => context.push('/customer-profile/address'),
                   ),
+
+                  // Edit payment method
                   ProfileMenuItem(
                     icon: Icons.credit_card_outlined,
                     iconColor: AppColors.primary,
                     title: 'Phương thức thanh toán',
                     onTap: () => context.push('/customer-profile/payment'),
                   ),
+
+                  // Edit wallet
                   ProfileMenuItem(
                     icon: Icons.account_balance_wallet_outlined,
                     iconColor: AppColors.primary,
                     title: 'Ví của tôi',
                     onTap: () => context.push('/customer-profile/wallet'),
                   ),
+
+                  // Edit voucher
                   ProfileMenuItem(
                     icon: Icons.local_offer_outlined,
                     iconColor: AppColors.primary,
                     title: 'Mã giảm giá của tôi',
                     onTap: () => context.push('/customer-profile/voucher'),
                   ),
+
+                  // Support
                   ProfileMenuItem(
                     icon: Icons.help_outline,
                     iconColor: AppColors.primary,
@@ -127,7 +138,10 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                       );
                     },
                   ),
+
                   const Divider(thickness: 0.8),
+
+                  // Logout btn
                   ProfileMenuItem(
                     icon: Icons.logout,
                     title: 'Đăng xuất',

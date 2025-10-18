@@ -9,15 +9,26 @@ class WalletScreen extends StatelessWidget {
     const balance = 250000; // mock
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Ví của tôi'), centerTitle: true),
+      // Appbar
+      appBar: AppBar(
+        title: const Text('Ví của tôi'),
+        centerTitle: true,
+        backgroundColor: AppColors.primary,
+      ),
+
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const SizedBox(height: 40),
+
+            // Title
             const Text('Số dư khả dụng', style: TextStyle(fontSize: 16)),
+
             const SizedBox(height: 10),
+
+            // Money
             Text(
               '${balance.toStringAsFixed(0)} VNĐ',
               style: const TextStyle(
@@ -26,7 +37,10 @@ class WalletScreen extends StatelessWidget {
                 color: Colors.green,
               ),
             ),
+
             const SizedBox(height: 30),
+
+            // Button add money
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -37,7 +51,10 @@ class WalletScreen extends StatelessWidget {
                 child: const Text('Nạp thêm tiền'),
               ),
             ),
+
             const SizedBox(height: 12),
+
+            // Button to watch transaction history
             SizedBox(
               width: double.infinity,
               child: OutlinedButton(

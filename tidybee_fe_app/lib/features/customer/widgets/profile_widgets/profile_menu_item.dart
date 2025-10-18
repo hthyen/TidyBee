@@ -20,6 +20,8 @@ class ProfileMenuItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       leading: Icon(icon, color: iconColor ?? Colors.grey[700]),
+
+      // Title
       title: Text(
         title,
         style: TextStyle(

@@ -19,7 +19,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Chỉnh sửa hồ sơ'), centerTitle: true),
+      // Appbar
+      appBar: AppBar(
+        title: const Text('Chỉnh sửa hồ sơ'),
+        centerTitle: true,
+        backgroundColor: AppColors.primary,
+      ),
+
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -34,6 +40,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       'https://i.pravatar.cc/150?img=47',
                     ),
                   ),
+
+                  // Icon edit
                   Positioned(
                     bottom: 0,
                     right: 0,
@@ -50,18 +58,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ],
               ),
             ),
+
             const SizedBox(height: 20),
 
-            // Form
+            // Form name
             TextField(
               controller: _nameController,
               decoration: const InputDecoration(labelText: 'Họ và tên'),
             ),
+
             const SizedBox(height: 16),
+
+            // Form email
             TextField(
               controller: _emailController,
               decoration: const InputDecoration(labelText: 'Email'),
             ),
+
             const Spacer(),
 
             // Save button
