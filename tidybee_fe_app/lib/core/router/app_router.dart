@@ -17,6 +17,8 @@ import 'package:tidybee_fe_app/features/helper/screens/helper_bottom_navigate.da
 import 'package:tidybee_fe_app/features/helper/screens/helper_chat/helper_chat_screen.dart';
 import 'package:tidybee_fe_app/features/helper/screens/helper_home/helper_home_screen.dart';
 import 'package:tidybee_fe_app/features/helper/screens/helper_profile/helper_profile_screen.dart';
+import 'package:tidybee_fe_app/features/helper/screens/helper_profile/edit_personal_info_screen.dart';
+import 'package:tidybee_fe_app/features/helper/screens/helper_profile/edit_work_info_screen.dart';
 import 'package:tidybee_fe_app/features/not_found/not_found_page.dart';
 import '../../features/auth/screens/forgot_password_screen.dart';
 import '../../features/auth/screens/otp_verification_screen.dart';
@@ -233,6 +235,31 @@ class AppRouter {
 
               return HelperProfileScreen(token: token);
             },
+            routes: [
+              // Route: edit personal information
+              GoRoute(
+                path: "edit-personal",
+                name: "edit-helper-personal",
+                builder: (context, state) {
+                  final extra = state.extra as Map<String, dynamic>?;
+                  final token = extra?["token"] as String? ?? '';
+                  final helper = extra?["helper"];
+                  return EditPersonalInfoScreen(helper: helper, token: token);
+                },
+              ),
+
+              // Route: edit work information
+              GoRoute(
+                path: "edit-work",
+                name: "edit-helper-work",
+                builder: (context, state) {
+                  final extra = state.extra as Map<String, dynamic>?;
+                  final token = extra?["token"] as String? ?? '';
+                  final helper = extra?["helper"];
+                  return EditWorkInfoScreen(helper: helper, token: token);
+                },
+              ),
+            ],
           ),
         ],
       ),
