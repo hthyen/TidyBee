@@ -21,10 +21,13 @@ class UserServices {
 
     if (response.statusCode == 200) {
       // Forces to use UTF-8 encoding to avoid issues with special characters (Vietnamese)
-      final data = jsonDecode(utf8.decode(response.bodyBytes));
-      final userData = data['data']?['user'];
+      final data = jsonDecode(utf8.decode(response.bodyBytes))['data'];
 
-      final user = User.fromJson(userData);
+      // Need to copy accToken because the data return from respone is a {}
+      // and it contain accessToken and user in different position
+      final user = User.fromJson(
+        data['user'],
+      ).copyWith(accessToken: data['accessToken']);
 
       // Save data into SharedPreferences
       final prefs = await SharedPreferences.getInstance();

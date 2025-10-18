@@ -53,4 +53,39 @@ class User {
       createdAt: DateTime.parse(json["createdAt"]),
     );
   }
+
+  // Add accessToken into user
+  User copyWith({
+    String? id,
+    String? firstName,
+    String? lastName,
+    String? password,
+    String? accessToken,
+    String? email,
+    String? phoneNumber,
+    int? role,
+    int? status,
+    DateTime? lastLoginAt,
+    String? avatar,
+    DateTime? dateOfBirth,
+    String? gender,
+    DateTime? createdAt,
+  }) {
+    return User(
+      id: id ?? this.id,
+      firstName: firstName ?? this.firstName,
+      lastName: lastName ?? this.lastName,
+      password: password ?? this.password,
+      accessToken: accessToken ?? this.accessToken,
+      email: email ?? this.email,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
+      role: role ?? this.role,
+      status: status ?? this.status,
+      lastLoginAt: lastLoginAt ?? this.lastLoginAt,
+      avatar: avatar ?? this.avatar,
+      dateOfBirth: dateOfBirth ?? this.dateOfBirth,
+      gender: gender ?? this.gender,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 }
