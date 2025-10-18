@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tidybee_fe_app/core/common_widgets/notification_service.dart';
 import 'package:tidybee_fe_app/core/theme/app_colors.dart';
+import 'package:tidybee_fe_app/features/auth/model/user.dart';
+import 'package:tidybee_fe_app/features/auth/services/user_services.dart';
 
 class LoginForm extends StatefulWidget {
   const LoginForm({super.key});
@@ -19,6 +22,9 @@ class _LoginFormState extends State<LoginForm> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
+  // Create instance object of UserServices
+  final UserServices userServices = UserServices();
+
   // Release memory that controller stored
   @override
   void dispose() {
@@ -29,51 +35,50 @@ class _LoginFormState extends State<LoginForm> {
 
   // Mehthod login
   Future<void> submitLogin() async {
-    // if (formKey.currentState!.validate()) {
-    //   final emailValue = emailController.text;
-    //   final passwordValue = passwordController.text;
+    if (formKey.currentState!.validate()) {
+      final emailValue = emailController.text;
+      final passwordValue = passwordController.text;
 
-    //   setState(() {
-    //     isLoading = true;
-    //   });
+      setState(() {
+        isLoading = true;
+      });
 
-    //   try {
-    //     final User? user = await userServices.login(emailValue, passwordValue);
+      try {
+        final User? user = await userServices.login(emailValue, passwordValue);
 
-    //     // If user leave this screen then stop logic below
-    //     if (!mounted) return;
+        // If user leave this screen then stop logic below
+        if (!mounted) return;
 
-    //     if (user != null) {
-    //       // Login successful
-    //       NotificationService.showSuccess(
-    //         context,
-    //         "Chào mừng bạn đã đến với PickMe!",
-    //       );
+        if (user != null) {
+          // Login successful
+          NotificationService.showSuccess(
+            context,
+            "Chào mừng bạn đã đến với PickMe!",
+          );
 
-    //       if (user.role == "CUSTOMER") {
-    // context.go("/home-page", extra: user.token);
-    //       }
+          if (user.role == 1) {
+            context.go("/customer-homepage", extra: user.accessToken);
+          }
 
-    //       if (user.role == "RESTAURANT_OWNER") {
-    //         context.go("/merchant-homepage", extra: user.token);
-    //       }
-    //     } else {
-    //       // Login failed
-    //       NotificationService.showError(
-    //         context,
-    //         "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.",
-    //       );
-    //     }
-    //   } catch (e) {
-    //     if (!mounted) return;
-    //     NotificationService.showError(context, "Có lỗi xảy ra: $e");
-    //   } finally {
-    //     if (mounted) {
-    //       setState(() => isLoading = false);
-    //     }
-    //   }
-    // }
-    context.go("/customer-homepage");
+          // if (user.role == "RESTAURANT_OWNER") {
+          //   context.go("/merchant-homepage", extra: user.token);
+          // }
+        } else {
+          // Login failed
+          NotificationService.showError(
+            context,
+            "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.",
+          );
+        }
+      } catch (e) {
+        if (!mounted) return;
+        NotificationService.showError(context, "Có lỗi xảy ra: $e");
+      } finally {
+        if (mounted) {
+          setState(() => isLoading = false);
+        }
+      }
+    }
   }
 
   @override

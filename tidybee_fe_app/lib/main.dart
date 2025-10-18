@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-// import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:tidybee_fe_app/core/router/app_router.dart';
-// import 'package:pickme_fe_app/core/router/app_router.dart';
 
 Future<void> main() async {
   // Load .env file
   WidgetsFlutterBinding.ensureInitialized();
-  // await dotenv.load(fileName: ".env");
+  await dotenv.load(fileName: ".env");
 
   runApp(const MyApp());
 }

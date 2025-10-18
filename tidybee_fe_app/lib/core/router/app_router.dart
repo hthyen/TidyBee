@@ -21,7 +21,7 @@ class AppRouter {
   static final _rootCustomerNavigatorKey = GlobalKey<NavigatorState>();
 
   static final GoRouter router = GoRouter(
-    initialLocation: "/customer-homepage",
+    initialLocation: "/login",
     debugLogDiagnostics: true, //console router
     routes: [
       // ================= AUTH =================
