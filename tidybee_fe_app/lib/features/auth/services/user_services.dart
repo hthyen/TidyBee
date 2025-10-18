@@ -20,7 +20,9 @@ class UserServices {
     if (response.statusCode == 200) {
       // Forces to use UTF-8 encoding to avoid issues with special characters (Vietnamese)
       final data = jsonDecode(utf8.decode(response.bodyBytes));
-      final user = User.fromJson(data);
+      final userData = data['data']?['user'];
+
+      final user = User.fromJson(userData);
 
       // Save data into SharedPreferences
       final prefs = await SharedPreferences.getInstance();
@@ -28,7 +30,10 @@ class UserServices {
       await prefs.setString("firstName", user.firstName ?? "");
       await prefs.setString("lastName", user.lastName ?? "");
       await prefs.setString("email", user.email ?? "");
-      await prefs.setString("avatar", jsonEncode(user.avatar));
+      await prefs.setString(
+        "avatar",
+        user.avatar != null ? jsonEncode(user.avatar) : "",
+      );
       await prefs.setString("role", user.role?.toString() ?? "");
       await prefs.setString("phoneNumber", user.phoneNumber ?? "");
       await prefs.setString("accessToken", user.accessToken ?? "");

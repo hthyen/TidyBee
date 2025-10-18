@@ -45,7 +45,7 @@ class User {
       lastLoginAt: json["lastLoginAt"] != null
           ? DateTime.tryParse(json["lastLoginAt"])
           : null,
-      avatar: json["avatar"],
+      avatar: json["avatar"] ?? '',
       dateOfBirth: json["dateOfBirth"] != null
           ? DateTime.tryParse(json["dateOfBirth"])
           : null,

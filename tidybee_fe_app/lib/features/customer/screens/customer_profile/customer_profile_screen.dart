@@ -19,13 +19,40 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
   String email = 'esther.howard@email.com';
   String avatarUrl = 'https://i.pravatar.cc/150?img=47';
 
+  // Method to logout
   Future<void> _logout(BuildContext context) async {
+    final confirm =
+        await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Xác nhận'),
+            content: const Text('Bạn có chắc muốn đăng xuất?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: const Text('Hủy'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(true),
+                child: const Text('Đăng xuất'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+
+    if (!confirm) return;
+
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('token');
+    await prefs.clear();
 
-    if (!mounted) return;
+    if (context.mounted) {
+      context.go("/login");
 
-    context.go('/login');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Đã đăng xuất')));
+    }
   }
 
   @override
@@ -52,8 +79,11 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
               name,
               style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
             ),
+
             const SizedBox(height: 4),
+
             Text(email, style: TextStyle(color: Colors.grey[600])),
+
             const SizedBox(height: 12),
 
             // Edit Profile Button

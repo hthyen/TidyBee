@@ -58,6 +58,10 @@ class _LoginFormState extends State<LoginForm> {
 
           if (user.role == 1) {
             context.go("/customer-homepage", extra: user.accessToken);
+
+            Future.delayed(const Duration(milliseconds: 300), () {
+              NotificationService.showSuccess(context, "Đăng nhập thành công");
+            });
           }
 
           // if (user.role == "RESTAURANT_OWNER") {
