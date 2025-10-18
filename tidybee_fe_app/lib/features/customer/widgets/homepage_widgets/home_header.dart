@@ -19,9 +19,9 @@ class _HomeHeaderState extends State<HomeHeader> {
       // Header colors
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
+          colors: [AppColors.primary, AppColors.primary.withOpacity(0.85)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
         borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(20),
@@ -33,28 +33,48 @@ class _HomeHeaderState extends State<HomeHeader> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Title
-          Text(
-            "Xin chào, ${widget.userName}",
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
+          Row(
+            children: [
+              // Avatar
+              CircleAvatar(
+                radius: 26,
+                backgroundColor: Colors.white.withOpacity(0.3),
+                child: const Icon(Icons.person, size: 30, color: Colors.white),
+              ),
+
+              const SizedBox(width: 12),
+
+              // Greeting
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Title
+                  Text(
+                    "Xin chào, ${widget.userName}",
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
 
           const SizedBox(height: 6),
 
           // Subtitle
           Container(
-            padding: const EdgeInsets.all(8),
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
+              color: Colors.white.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(16),
             ),
             child: const Text(
               "Khám phá và trải nghiệm các dịch vụ gia đình ngay hôm nay!",
-              style: TextStyle(color: Colors.white, fontSize: 13),
+              style: TextStyle(color: Colors.white, fontSize: 14, height: 1.4),
             ),
           ),
         ],
