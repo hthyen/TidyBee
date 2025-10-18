@@ -44,6 +44,7 @@ class Helper {
     this.locationData,
   });
 
+  // Parse data from JSON into model
   factory Helper.fromJson(Map<String, dynamic> json) {
     return Helper(
       id: json['id']?.toString(),
@@ -83,30 +84,5 @@ class Helper {
       helperName: json['helperName'],
       helperAvatar: json['helperAvatar'],
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      "id": id,
-      "userId": userId,
-      "description": description,
-      "hourlyRate": hourlyRate,
-      "isAvailable": isAvailable,
-      "rating": rating,
-      "reviewCount": reviewCount,
-      "services": services,
-      "experience": experience,
-      "languages": languages,
-      "location": location,
-      "locationData": locationData,
-      "workingHoursStart": workingHoursStart,
-      "workingHoursEnd": workingHoursEnd,
-      "workingDays": workingDays,
-      "backgroundChecked": backgroundChecked,
-      "documents": documents,
-      "createdAt": createdAt?.toIso8601String(),
-      "helperName": helperName,
-      "helperAvatar": helperAvatar,
-    };
   }
 }

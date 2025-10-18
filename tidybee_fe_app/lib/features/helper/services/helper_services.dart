@@ -6,7 +6,7 @@ import 'package:tidybee_fe_app/features/helper/model/helper.dart';
 class HelperServices {
   final String helperProfileUrl = dotenv.env['API_HELPER_BY_ID'] ?? '';
 
-  /// Retrieve helper information by userId
+  // Retrieve helper information by userId
   Future<Helper?> getHelper(String token, String userId) async {
     try {
       final url = Uri.parse('$helperProfileUrl/$userId');
@@ -33,7 +33,7 @@ class HelperServices {
     }
   }
 
-  /// Create or update Helper Profile
+  // Create or update Helper Profile
   Future<bool> updateHelper(
     String token,
     Map<String, dynamic> updateData,
