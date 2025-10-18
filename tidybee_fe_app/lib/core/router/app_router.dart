@@ -12,6 +12,11 @@ import 'package:tidybee_fe_app/features/customer/screens/customer_profile/addres
 import 'package:tidybee_fe_app/features/customer/screens/customer_profile/payment_method_screen.dart';
 import 'package:tidybee_fe_app/features/customer/screens/customer_profile/wallet_screen.dart';
 import 'package:tidybee_fe_app/features/customer/screens/customer_profile/voucher_screen.dart';
+import 'package:tidybee_fe_app/features/helper/screens/helper_booking/helper_booking_screen.dart';
+import 'package:tidybee_fe_app/features/helper/screens/helper_bottom_navigate.dart';
+import 'package:tidybee_fe_app/features/helper/screens/helper_chat/helper_chat_screen.dart';
+import 'package:tidybee_fe_app/features/helper/screens/helper_home/helper_home_screen.dart';
+import 'package:tidybee_fe_app/features/helper/screens/helper_profile/helper_profile_screen.dart';
 import 'package:tidybee_fe_app/features/not_found/not_found_page.dart';
 import '../../features/auth/screens/forgot_password_screen.dart';
 import '../../features/auth/screens/otp_verification_screen.dart';
@@ -19,6 +24,7 @@ import '../../features/auth/screens/reset_password_screen.dart';
 
 class AppRouter {
   static final _rootCustomerNavigatorKey = GlobalKey<NavigatorState>();
+  static final _rootHelperNavigatorKey = GlobalKey<NavigatorState>();
 
   static final GoRouter router = GoRouter(
     initialLocation: "/login",
@@ -137,27 +143,96 @@ class AppRouter {
                 name: "edit-profile",
                 builder: (context, state) => const EditProfileScreen(),
               ),
+
               GoRoute(
                 path: "address",
                 name: "address",
                 builder: (context, state) => const AddressScreen(),
               ),
+
               GoRoute(
                 path: "payment",
                 name: "payment-method",
                 builder: (context, state) => const PaymentMethodScreen(),
               ),
+
               GoRoute(
                 path: "wallet",
                 name: "wallet",
                 builder: (context, state) => const WalletScreen(),
               ),
+
               GoRoute(
                 path: "voucher",
                 name: "voucher",
                 builder: (context, state) => const VoucherScreen(),
               ),
             ],
+          ),
+        ],
+      ),
+
+      // ================= HELPER =================
+      ShellRoute(
+        navigatorKey: _rootHelperNavigatorKey,
+        builder: (context, state, child) {
+          // Take token from state.extra
+          final token = state.extra is String ? state.extra as String : null;
+
+          // Push token into HelperBottomNavigate
+          return HelperBottomNavigate(token: token, child: child);
+        },
+        routes: [
+          GoRoute(
+            path: "/helper-homepage",
+            name: "helper-homepage",
+            builder: (context, state) {
+              // Take token from parent widget (HelperBottomNavigate)
+              final bottomWidget = context
+                  .findAncestorWidgetOfExactType<HelperBottomNavigate>();
+              final token = bottomWidget?.token ?? '';
+
+              return HelperHomeScreen(token: token);
+            },
+          ),
+
+          GoRoute(
+            path: "/helper-chat",
+            name: "helper-chat",
+            builder: (context, state) {
+              // Take token from parent widget (HelperBottomNavigate)
+              final bottomWidget = context
+                  .findAncestorWidgetOfExactType<HelperBottomNavigate>();
+              final token = bottomWidget?.token ?? '';
+
+              return HelperChatScreen(token: token);
+            },
+          ),
+
+          GoRoute(
+            path: "/helper-booking",
+            name: "helper-booking",
+            builder: (context, state) {
+              // Take token from parent widget (HelperBottomNavigate)
+              final bottomWidget = context
+                  .findAncestorWidgetOfExactType<HelperBottomNavigate>();
+              final token = bottomWidget?.token ?? '';
+
+              return HelperBookingScreen(token: token);
+            },
+          ),
+
+          GoRoute(
+            path: "/helper-profile",
+            name: "helper-profile",
+            builder: (context, state) {
+              // Take token from parent widget (HelperBottomNavigate)
+              final bottomWidget = context
+                  .findAncestorWidgetOfExactType<HelperBottomNavigate>();
+              final token = bottomWidget?.token ?? '';
+
+              return HelperProfileScreen(token: token);
+            },
           ),
         ],
       ),

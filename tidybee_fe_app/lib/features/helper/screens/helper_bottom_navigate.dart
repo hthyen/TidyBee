@@ -2,26 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tidybee_fe_app/core/theme/app_colors.dart';
 
-class CustomerBottomNavigate extends StatefulWidget {
+class HelperBottomNavigate extends StatefulWidget {
   final Widget child;
   final String? token;
 
-  const CustomerBottomNavigate({super.key, required this.child, this.token});
+  const HelperBottomNavigate({super.key, required this.child, this.token});
 
   @override
-  State<CustomerBottomNavigate> createState() => _CustomerBottomNavigateState();
+  State<HelperBottomNavigate> createState() => _HelperBottomNavigateState();
 }
 
-class _CustomerBottomNavigateState extends State<CustomerBottomNavigate> {
+class _HelperBottomNavigateState extends State<HelperBottomNavigate> {
   // Track the currently selected tab index
   int _currentIndex = 0;
 
   // Define routes corresponding to each bottom nav item
   final List<String> _routes = [
-    '/customer-homepage',
-    '/customer-chat',
-    '/customer-booking',
-    '/customer-profile',
+    '/helper-homepage',
+    '/helper-chat',
+    '/helper-booking',
+    '/helper-profile',
   ];
 
   // Handle tab change when user taps a bottom nav item
