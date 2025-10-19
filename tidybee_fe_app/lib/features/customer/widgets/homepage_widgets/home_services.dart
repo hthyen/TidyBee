@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:tidybee_fe_app/core/theme/app_colors.dart';
 
 class HomeServices extends StatefulWidget {
@@ -10,14 +11,38 @@ class HomeServices extends StatefulWidget {
 
 class _HomeServicesState extends State<HomeServices> {
   final services = [
-    {"title": "Dọn dẹp nhà", "icon": Icons.cleaning_services_outlined},
-    {"title": "Tổng vệ\nsinh", "icon": Icons.local_laundry_service_outlined},
-    {"title": "Vệ sinh\nmáy lạnh", "icon": Icons.ac_unit_outlined},
-    {"title": "Vệ sinh\nbếp", "icon": Icons.kitchen_outlined},
-    {"title": "Trông Trẻ", "icon": Icons.child_friendly_outlined},
-    {"title": "Vệ sinh\nvăn phòng", "icon": Icons.apartment_outlined},
-    {"title": "Vệ sinh\nđệm", "icon": Icons.bed_outlined},
-    {"title": "Vệ sinh\nmáy giặt", "icon": Icons.local_laundry_service},
+    {
+      "title": "Dọn dẹp nhà",
+      "icon": Icons.cleaning_services_outlined,
+      "price": "180000",
+    },
+    {
+      "title": "Tổng vệ sinh",
+      "icon": Icons.local_laundry_service_outlined,
+      "price": "180000",
+    },
+    {
+      "title": "Vệ sinh máy lạnh",
+      "icon": Icons.ac_unit_outlined,
+      "price": "80000",
+    },
+    {"title": "Vệ sinh bếp", "icon": Icons.kitchen_outlined, "price": 150000},
+    {
+      "title": "Trông Trẻ",
+      "icon": Icons.child_friendly_outlined,
+      "price": "200000",
+    },
+    {
+      "title": "Vệ sinh văn phòng",
+      "icon": Icons.apartment_outlined,
+      "price": "500000",
+    },
+    {"title": "Vệ sinh đệm", "icon": Icons.bed_outlined, "price": 50000},
+    {
+      "title": "Vệ sinh máy giặt",
+      "icon": Icons.local_laundry_service,
+      "price": "50000",
+    },
   ];
 
   @override
@@ -74,8 +99,15 @@ class _HomeServicesState extends State<HomeServices> {
                 // MediaQuery: take size of device screen
                 width: MediaQuery.of(context).size.width / 4.8,
                 child: GestureDetector(
+                  // Navigate
                   onTap: () {
-                    // điều hướng sang chi tiết dịch vụ
+                    context.push(
+                      "/customer-service-detail",
+                      extra: {
+                        "title": service["title"],
+                        "price": service["price"],
+                      },
+                    );
                   },
                   child: Container(
                     decoration: BoxDecoration(

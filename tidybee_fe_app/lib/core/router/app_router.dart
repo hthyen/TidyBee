@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tidybee_fe_app/features/auth/screens/login_screen.dart';
@@ -6,6 +7,7 @@ import 'package:tidybee_fe_app/features/customer/screens/customer_booking/custom
 import 'package:tidybee_fe_app/features/customer/screens/customer_chat/customer_chat_screen.dart';
 import 'package:tidybee_fe_app/features/customer/screens/customer_bottom_navigate.dart';
 import 'package:tidybee_fe_app/features/customer/screens/customer_home/customer_home_screen.dart';
+import 'package:tidybee_fe_app/features/customer/screens/customer_home/service_detail/customer_services_detail_screen.dart';
 import 'package:tidybee_fe_app/features/customer/screens/customer_profile/customer_profile_screen.dart';
 import 'package:tidybee_fe_app/features/customer/screens/customer_profile/edit_profile_screen.dart';
 import 'package:tidybee_fe_app/features/customer/screens/customer_profile/address_screen.dart';
@@ -17,6 +19,8 @@ import 'package:tidybee_fe_app/features/helper/screens/helper_bottom_navigate.da
 import 'package:tidybee_fe_app/features/helper/screens/helper_chat/helper_chat_screen.dart';
 import 'package:tidybee_fe_app/features/helper/screens/helper_home/helper_home_screen.dart';
 import 'package:tidybee_fe_app/features/helper/screens/helper_profile/helper_profile_screen.dart';
+import 'package:tidybee_fe_app/features/helper/screens/helper_profile/edit_personal_info_screen.dart';
+import 'package:tidybee_fe_app/features/helper/screens/helper_profile/edit_work_info_screen.dart';
 import 'package:tidybee_fe_app/features/not_found/not_found_page.dart';
 import '../../features/auth/screens/forgot_password_screen.dart';
 import '../../features/auth/screens/otp_verification_screen.dart';
@@ -172,6 +176,22 @@ class AppRouter {
         ],
       ),
 
+      GoRoute(
+        path: "/customer-service-detail",
+        name: "customer-service-detail",
+        builder: (context, state) {
+          // Lấy dữ liệu từ state.extra
+          if (state.extra is Map<String, dynamic>) {
+            final data = state.extra as Map<String, dynamic>;
+            final String title = data["title"] ?? "Dịch vụ";
+            final String price = data["price"] ?? "";
+
+            return CustomerServicesDetailScreen(title: title, price: price);
+          }
+          return const NotFoundPage();
+        },
+      ),
+
       // ================= HELPER =================
       ShellRoute(
         navigatorKey: _rootHelperNavigatorKey,
@@ -233,6 +253,31 @@ class AppRouter {
 
               return HelperProfileScreen(token: token);
             },
+            routes: [
+              // Route: edit personal information
+              GoRoute(
+                path: "edit-personal",
+                name: "edit-helper-personal",
+                builder: (context, state) {
+                  final extra = state.extra as Map<String, dynamic>?;
+                  final token = extra?["token"] as String? ?? '';
+                  final helper = extra?["helper"];
+                  return EditPersonalInfoScreen(helper: helper, token: token);
+                },
+              ),
+
+              // Route: edit work information
+              GoRoute(
+                path: "edit-work",
+                name: "edit-helper-work",
+                builder: (context, state) {
+                  final extra = state.extra as Map<String, dynamic>?;
+                  final token = extra?["token"] as String? ?? '';
+                  final helper = extra?["helper"];
+                  return EditWorkInfoScreen(helper: helper, token: token);
+                },
+              ),
+            ],
           ),
         ],
       ),
