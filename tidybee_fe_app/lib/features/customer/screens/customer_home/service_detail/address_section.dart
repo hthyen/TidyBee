@@ -18,6 +18,7 @@ class _AddressSectionState extends State<AddressSection> {
     _currentAddress = widget.initialAddress;
   }
 
+  // Alert to parent widget that have changed
   @override
   void didUpdateWidget(AddressSection oldWidget) {
     super.didUpdateWidget(oldWidget);
