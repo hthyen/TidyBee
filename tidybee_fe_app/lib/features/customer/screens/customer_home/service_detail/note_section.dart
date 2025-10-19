@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class NoteSection extends StatefulWidget {
-  final Function(String)? onChanged;
+  final Function(String note)? onChanged;
 
   const NoteSection({super.key, this.onChanged});
 
@@ -64,7 +64,12 @@ class _NoteSectionState extends State<NoteSection> {
               contentPadding: const EdgeInsets.all(12),
             ),
 
-            onChanged: widget.onChanged,
+            onChanged: (value) {
+              if (widget.onChanged != null) {
+                widget.onChanged!(value);
+              }
+              ;
+            },
           ),
         ],
       ),
