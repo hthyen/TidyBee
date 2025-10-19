@@ -11,14 +11,38 @@ class HomeServices extends StatefulWidget {
 
 class _HomeServicesState extends State<HomeServices> {
   final services = [
-    {"title": "Dọn dẹp nhà", "icon": Icons.cleaning_services_outlined},
-    {"title": "Tổng vệ sinh", "icon": Icons.local_laundry_service_outlined},
-    {"title": "Vệ sinh máy lạnh", "icon": Icons.ac_unit_outlined},
-    {"title": "Vệ sinh bếp", "icon": Icons.kitchen_outlined},
-    {"title": "Trông Trẻ", "icon": Icons.child_friendly_outlined},
-    {"title": "Vệ sinh văn phòng", "icon": Icons.apartment_outlined},
-    {"title": "Vệ sinh đệm", "icon": Icons.bed_outlined},
-    {"title": "Vệ sinh máy giặt", "icon": Icons.local_laundry_service},
+    {
+      "title": "Dọn dẹp nhà",
+      "icon": Icons.cleaning_services_outlined,
+      "price": "180000",
+    },
+    {
+      "title": "Tổng vệ sinh",
+      "icon": Icons.local_laundry_service_outlined,
+      "price": "180000",
+    },
+    {
+      "title": "Vệ sinh máy lạnh",
+      "icon": Icons.ac_unit_outlined,
+      "price": "80000",
+    },
+    {"title": "Vệ sinh bếp", "icon": Icons.kitchen_outlined, "price": 150000},
+    {
+      "title": "Trông Trẻ",
+      "icon": Icons.child_friendly_outlined,
+      "price": "200000",
+    },
+    {
+      "title": "Vệ sinh văn phòng",
+      "icon": Icons.apartment_outlined,
+      "price": "500000",
+    },
+    {"title": "Vệ sinh đệm", "icon": Icons.bed_outlined, "price": 50000},
+    {
+      "title": "Vệ sinh máy giặt",
+      "icon": Icons.local_laundry_service,
+      "price": "50000",
+    },
   ];
 
   @override
@@ -81,7 +105,7 @@ class _HomeServicesState extends State<HomeServices> {
                       "/customer-service-detail",
                       extra: {
                         "title": service["title"],
-                        "icon": service["icon"],
+                        "price": service["price"],
                       },
                     );
                   },

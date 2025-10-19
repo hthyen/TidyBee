@@ -43,7 +43,7 @@ class LocationService {
 
       if (placemarks.isNotEmpty) {
         final place = placemarks.first;
-        return "${place.street ?? ''}, ${place.subLocality ?? ''}, ${place.locality ?? ''}";
+        return "${place.street ?? ''}, ${place.subAdministrativeArea ?? ''}, ${place.administrativeArea ?? ''}";
       } else {
         print("Không tìm thấy địa chỉ cho vị trí này.");
         return null;
