@@ -185,8 +185,15 @@ class AppRouter {
             final data = state.extra as Map<String, dynamic>;
             final String title = data["title"] ?? "Dịch vụ";
             final String price = data["price"] ?? "";
+            final int id = data["id"] ?? 0;
+            final String description = data["description"] ?? "Mô tả";
 
-            return CustomerServicesDetailScreen(title: title, price: price);
+            return CustomerServicesDetailScreen(
+              title: title,
+              id: id,
+              price: price,
+              description: description,
+            );
           }
           return const NotFoundPage();
         },

@@ -4,8 +4,20 @@ import 'package:tidybee_fe_app/core/common_services/format_money.dart';
 
 class WorkingTimeSection extends StatefulWidget {
   final String price;
+  final Function(
+    TimeOfDay start,
+    TimeOfDay end,
+    double estimatedPrice,
+    bool recursion,
+    DateTime? recurringDate,
+  )?
+  onTimeChanged;
 
-  const WorkingTimeSection({super.key, required this.price});
+  const WorkingTimeSection({
+    super.key,
+    required this.price,
+    this.onTimeChanged,
+  });
 
   @override
   State<WorkingTimeSection> createState() => _WorkingTimeSectionState();
@@ -14,9 +26,11 @@ class WorkingTimeSection extends StatefulWidget {
 class _WorkingTimeSectionState extends State<WorkingTimeSection> {
   late List<DateTime> next7Days;
   int selectedIndex = 0;
+  double selectedPrice = 0;
   TimeOfDay selectedStartTime = const TimeOfDay(hour: 6, minute: 0);
   TimeOfDay selectedEndTime = const TimeOfDay(hour: 7, minute: 0);
   bool isRecurring = false;
+  DateTime? recurringEndDate;
 
   // Method generate next 7 days from today
   void _generateNext7Days() {
@@ -42,6 +56,25 @@ class _WorkingTimeSectionState extends State<WorkingTimeSection> {
     } else {
       return UtilsMethod.formatMoney(valueInt);
     }
+  }
+
+  // Format price into double
+  double _getPriceDouble(DateTime date, String basePriceStr) {
+    double valueInt = double.parse(basePriceStr);
+
+    if (date.weekday == DateTime.sunday) {
+      double increasePrice = valueInt + 50000;
+
+      return increasePrice;
+    } else {
+      return valueInt;
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    selectedPrice = double.parse(widget.price); // default price
   }
 
   @override
@@ -99,7 +132,30 @@ class _WorkingTimeSectionState extends State<WorkingTimeSection> {
                 final price = _getPrice(date, widget.price);
 
                 return GestureDetector(
-                  onTap: () => setState(() => selectedIndex = index),
+                  onTap: () {
+                    setState(() {
+                      selectedIndex = index;
+                      selectedPrice = _getPriceDouble(date, widget.price);
+
+                      // Add 7 days to selected day
+                      recurringEndDate = isRecurring
+                          ? next7Days[selectedIndex].add(
+                              const Duration(days: 7),
+                            )
+                          : null;
+                    });
+
+                    // Pass data into parent widget
+                    if (widget.onTimeChanged != null) {
+                      widget.onTimeChanged!(
+                        selectedStartTime,
+                        selectedEndTime,
+                        selectedPrice,
+                        isRecurring,
+                        recurringEndDate,
+                      );
+                    }
+                  },
                   child: Container(
                     width: 100,
                     margin: const EdgeInsets.only(right: 8),
@@ -207,6 +263,17 @@ class _WorkingTimeSectionState extends State<WorkingTimeSection> {
                           hour: selectedStartTime.hour + 1,
                           minute: 0,
                         );
+
+                        // Pass data into parent widget
+                        if (widget.onTimeChanged != null) {
+                          widget.onTimeChanged!(
+                            selectedStartTime,
+                            selectedEndTime,
+                            selectedPrice,
+                            isRecurring,
+                            recurringEndDate,
+                          );
+                        }
                       });
                     }
                   },
@@ -269,6 +336,17 @@ class _WorkingTimeSectionState extends State<WorkingTimeSection> {
                       // Only allow end time that > start time
                       if (valueEndtime!.hour > selectedStartTime.hour) {
                         selectedEndTime = valueEndtime;
+
+                        // Pass data into parent widget
+                        if (widget.onTimeChanged != null) {
+                          widget.onTimeChanged!(
+                            selectedStartTime,
+                            selectedEndTime,
+                            selectedPrice,
+                            isRecurring,
+                            recurringEndDate,
+                          );
+                        }
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
@@ -296,7 +374,7 @@ class _WorkingTimeSectionState extends State<WorkingTimeSection> {
                 children: const [
                   // Text
                   Text(
-                    "Lặp lại hàng tuần",
+                    "Lặp lại vào tuần sau",
                     style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
                   ),
 
@@ -313,10 +391,50 @@ class _WorkingTimeSectionState extends State<WorkingTimeSection> {
                 activeColor: Colors.amber,
                 onChanged: (value) {
                   setState(() => isRecurring = value);
+
+                  // Add 7 days to current day
+                  recurringEndDate = isRecurring
+                      ? next7Days[selectedIndex].add(const Duration(days: 7))
+                      : null;
+
+                  // Pass data into parent widget
+                  if (widget.onTimeChanged != null) {
+                    widget.onTimeChanged!(
+                      selectedStartTime,
+                      selectedEndTime,
+                      selectedPrice,
+                      isRecurring,
+                      recurringEndDate,
+                    );
+                  }
                 },
               ),
             ],
           ),
+
+          // End date recursion ui
+          if (isRecurring && recurringEndDate != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0, left: 4),
+              child: Row(
+                children: [
+                  // Icon
+                  const Icon(Icons.event, color: Colors.grey, size: 20),
+
+                  const SizedBox(width: 8),
+
+                  // Text
+                  Text(
+                    "Ngày kết thúc lặp lại: ${DateFormat('dd/MM/yyyy').format(recurringEndDate!)}",
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );

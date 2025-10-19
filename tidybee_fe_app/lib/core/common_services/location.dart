@@ -3,7 +3,7 @@ import 'package:geolocator/geolocator.dart';
 
 class LocationService {
   //Method get current location
-  static Future<Position?> getCurrentPosition() async {
+  static Future<Map<String, dynamic>?> getCurrentPosition() async {
     bool serviceEnabled;
     LocationPermission permission;
 
@@ -26,14 +26,20 @@ class LocationService {
         desiredAccuracy: LocationAccuracy.high,
       );
 
-      return position;
+      return {
+        "position": position,
+        "latitude": position.latitude,
+        "longitude": position.longitude,
+      };
     } catch (e) {
       print("Lỗi khi lấy vị trí hiện tại: $e");
       return null;
     }
   }
 
-  static Future<String?> getAddressFromPosition(Position position) async {
+  static Future<Map<String, dynamic>?> getAddressFromPosition(
+    Position position,
+  ) async {
     try {
       // Take address from location
       List<Placemark> placemarks = await placemarkFromCoordinates(
@@ -43,7 +49,16 @@ class LocationService {
 
       if (placemarks.isNotEmpty) {
         final place = placemarks.first;
-        return "${place.street ?? ''}, ${place.subAdministrativeArea ?? ''}, ${place.administrativeArea ?? ''}";
+        // return "${place.street ?? ''}, ${place.subAdministrativeArea ?? ''}, ${place.administrativeArea ?? ''}";
+
+        return {
+          "fullAddress":
+              "${place.street ?? ''}, ${place.subAdministrativeArea ?? ''}, ${place.administrativeArea ?? ''}",
+          "address": place.street,
+          "city": place.administrativeArea,
+          "district": place.subAdministrativeArea,
+          "ward": place.subAdministrativeArea,
+        };
       } else {
         print("Không tìm thấy địa chỉ cho vị trí này.");
         return null;
