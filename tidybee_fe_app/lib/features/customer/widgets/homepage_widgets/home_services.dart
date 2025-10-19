@@ -12,98 +12,131 @@ class HomeServices extends StatefulWidget {
 class _HomeServicesState extends State<HomeServices> {
   final services = [
     {
-      "title": "Dọn dẹp nhà",
+      "id": 1,
+      "title": "Dọn dẹp nhà cửa",
       "icon": Icons.cleaning_services_outlined,
       "price": "180000",
     },
     {
-      "title": "Tổng vệ sinh",
-      "icon": Icons.local_laundry_service_outlined,
-      "price": "180000",
+      "id": 2,
+      "title": "Nấu ăn tại nhà",
+      "icon": Icons.restaurant_outlined,
+      "price": "250000",
     },
     {
-      "title": "Vệ sinh máy lạnh",
-      "icon": Icons.ac_unit_outlined,
-      "price": "80000",
-    },
-    {"title": "Vệ sinh bếp", "icon": Icons.kitchen_outlined, "price": 150000},
-    {
-      "title": "Trông Trẻ",
+      "id": 3,
+      "title": "Trông trẻ",
       "icon": Icons.child_friendly_outlined,
       "price": "200000",
     },
     {
-      "title": "Vệ sinh văn phòng",
-      "icon": Icons.apartment_outlined,
+      "id": 4,
+      "title": "Chăm sóc người già",
+      "icon": Icons.elderly_outlined,
+      "price": "220000",
+    },
+    {
+      "id": 5,
+      "title": "Chăm sóc vườn",
+      "icon": Icons.yard_outlined,
+      "price": "150000",
+    },
+    {
+      "id": 6,
+      "title": "Chăm sóc thú cưng",
+      "icon": Icons.pets_outlined,
+      "price": "120000",
+    },
+    {
+      "id": 7,
+      "title": "Giặt ủi",
+      "icon": Icons.local_laundry_service_outlined,
+      "price": "80000",
+    },
+    {
+      "id": 8,
+      "title": "Chuyển nhà",
+      "icon": Icons.local_shipping_outlined,
       "price": "500000",
     },
-    {"title": "Vệ sinh đệm", "icon": Icons.bed_outlined, "price": 50000},
     {
-      "title": "Vệ sinh máy giặt",
-      "icon": Icons.local_laundry_service,
-      "price": "50000",
+      "id": 9,
+      "title": "Sửa chữa & bảo trì",
+      "icon": Icons.build_outlined,
+      "price": "250000",
+    },
+    {
+      "id": 10,
+      "title": "Dịch vụ khác",
+      "icon": Icons.more_horiz_outlined,
+      "price": "0",
     },
   ];
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header - Button view all
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Title
-              const Text(
-                "Dịch vụ",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black87,
-                ),
-              ),
-
-              // Button view all
-              TextButton(
-                onPressed: () {},
-                style: TextButton.styleFrom(
-                  padding: EdgeInsets.zero,
-                  minimumSize: const Size(40, 30),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                child: Text(
-                  "Xem tất cả",
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header + Button view all
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Text
+                const Text(
+                  "Dịch vụ",
                   style: TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black87,
                   ),
                 ),
+
+                // Button
+                TextButton(
+                  onPressed: () {},
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: const Size(40, 30),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Text(
+                    "Xem tất cả",
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 10),
+
+            // GridView - fixed overflow
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: services.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 4, //items per row
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 16, //Margin bottom
+                childAspectRatio: 0.5, //width
               ),
-            ],
-          ),
-
-          const SizedBox(height: 10),
-
-          // Wrap to show all services of app
-          // Wrap == flex
-          Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            spacing: 8,
-            runSpacing: 16,
-            children: services.map((service) {
-              return SizedBox(
-                // MediaQuery: take size of device screen
-                width: MediaQuery.of(context).size.width / 4.8,
-                child: GestureDetector(
-                  // Navigate
+              itemBuilder: (context, index) {
+                final service = services[index];
+                //Navigate to detail
+                return GestureDetector(
                   onTap: () {
                     context.push(
                       "/customer-service-detail",
                       extra: {
+                        "id": service["id"],
                         "title": service["title"],
                         "price": service["price"],
                       },
@@ -116,9 +149,9 @@ class _HomeServicesState extends State<HomeServices> {
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     child: Column(
-                      mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        // Service
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
@@ -136,7 +169,7 @@ class _HomeServicesState extends State<HomeServices> {
 
                         const SizedBox(height: 8),
 
-                        // Title
+                        // Text
                         Text(
                           service["title"] as String,
                           textAlign: TextAlign.center,
@@ -150,13 +183,13 @@ class _HomeServicesState extends State<HomeServices> {
                       ],
                     ),
                   ),
-                ),
-              );
-            }).toList(),
-          ),
+                );
+              },
+            ),
 
-          const SizedBox(height: 20),
-        ],
+            const SizedBox(height: 20),
+          ],
+        ),
       ),
     );
   }

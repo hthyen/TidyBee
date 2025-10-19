@@ -8,13 +8,13 @@ import 'package:tidybee_fe_app/features/customer/screens/customer_home/service_d
 
 class CustomerServicesDetailScreen extends StatefulWidget {
   final String title;
-  // final IconData icon;
+  final int id;
   final String price;
 
   const CustomerServicesDetailScreen({
     super.key,
     required this.title,
-    // required this.icon,
+    required this.id,
     required this.price,
   });
 
