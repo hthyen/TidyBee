@@ -4,19 +4,19 @@ import 'package:tidybee_fe_app/core/common_services/format_money.dart';
 
 class WorkingTimeSection extends StatefulWidget {
   final String price;
-  final Function(
-    TimeOfDay start,
-    TimeOfDay end,
-    double estimatedPrice,
-    bool recursion,
-    DateTime? recurringDate,
-  )?
-  onTimeChanged;
+  final Function(double price, DateTime selectedDate)? onPriceChanged;
+  final Function(TimeOfDay start)? onStartTimeChanged;
+  final Function(TimeOfDay end)? onEndTimeChanged;
+  final Function(bool isRecurring, DateTime? recurringEndDate)?
+  onRecurringChanged;
 
   const WorkingTimeSection({
     super.key,
     required this.price,
-    this.onTimeChanged,
+    this.onPriceChanged,
+    this.onStartTimeChanged,
+    this.onEndTimeChanged,
+    this.onRecurringChanged,
   });
 
   @override
@@ -27,8 +27,8 @@ class _WorkingTimeSectionState extends State<WorkingTimeSection> {
   late List<DateTime> next7Days;
   int selectedIndex = 0;
   double selectedPrice = 0;
-  TimeOfDay selectedStartTime = const TimeOfDay(hour: 6, minute: 0);
-  TimeOfDay selectedEndTime = const TimeOfDay(hour: 7, minute: 0);
+  TimeOfDay? selectedStartTime;
+  TimeOfDay? selectedEndTime;
   bool isRecurring = false;
   DateTime? recurringEndDate;
 
@@ -74,14 +74,14 @@ class _WorkingTimeSectionState extends State<WorkingTimeSection> {
   @override
   void initState() {
     super.initState();
+    // Auto grenerate next 7 days
+    _generateNext7Days();
+
     selectedPrice = double.parse(widget.price); // default price
   }
 
   @override
   Widget build(BuildContext context) {
-    // Auto grenerate next 7 days
-    _generateNext7Days();
-
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(12),
@@ -145,16 +145,8 @@ class _WorkingTimeSectionState extends State<WorkingTimeSection> {
                           : null;
                     });
 
-                    // Pass data into parent widget
-                    if (widget.onTimeChanged != null) {
-                      widget.onTimeChanged!(
-                        selectedStartTime,
-                        selectedEndTime,
-                        selectedPrice,
-                        isRecurring,
-                        recurringEndDate,
-                      );
-                    }
+                    // Pass price data into parent widget
+                    widget.onPriceChanged?.call(selectedPrice, date);
                   },
                   child: Container(
                     width: 100,
@@ -257,25 +249,18 @@ class _WorkingTimeSectionState extends State<WorkingTimeSection> {
                     setState(() => selectedStartTime = valueStartTime!);
 
                     // If start time >= end time => increase end time 1 hour
-                    if (selectedEndTime.hour <= selectedStartTime.hour) {
+                    if (selectedEndTime == null ||
+                        selectedEndTime!.hour <= selectedStartTime!.hour) {
                       setState(() {
                         selectedEndTime = TimeOfDay(
-                          hour: selectedStartTime.hour + 1,
+                          hour: selectedStartTime!.hour + 1,
                           minute: 0,
                         );
-
-                        // Pass data into parent widget
-                        if (widget.onTimeChanged != null) {
-                          widget.onTimeChanged!(
-                            selectedStartTime,
-                            selectedEndTime,
-                            selectedPrice,
-                            isRecurring,
-                            recurringEndDate,
-                          );
-                        }
                       });
                     }
+
+                    // Pass start time data into parent widget
+                    widget.onStartTimeChanged?.call(valueStartTime!);
                   },
                 ),
               ),
@@ -300,7 +285,7 @@ class _WorkingTimeSectionState extends State<WorkingTimeSection> {
 
               const SizedBox(width: 8),
 
-              // Dropdown start time
+              // Dropdown end time
               Expanded(
                 child: DropdownButtonFormField<TimeOfDay>(
                   // Decoration
@@ -332,32 +317,33 @@ class _WorkingTimeSectionState extends State<WorkingTimeSection> {
                   }),
 
                   onChanged: (valueEndtime) {
-                    setState(() {
-                      // Only allow end time that > start time
-                      if (valueEndtime!.hour > selectedStartTime.hour) {
-                        selectedEndTime = valueEndtime;
+                    // Need to choose start time first
+                    if (selectedStartTime == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Vui lòng chọn giờ bắt đầu trước"),
+                        ),
+                      );
+                      return;
+                    }
 
-                        // Pass data into parent widget
-                        if (widget.onTimeChanged != null) {
-                          widget.onTimeChanged!(
-                            selectedStartTime,
-                            selectedEndTime,
-                            selectedPrice,
-                            isRecurring,
-                            recurringEndDate,
-                          );
-                        }
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              "Giờ kết thúc phải lớn hơn giờ bắt đầu!",
-                            ),
-                            duration: Duration(seconds: 2),
+                    // Only allow end time that > start time
+                    if (valueEndtime!.hour <= selectedStartTime!.hour) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            "Giờ kết thúc phải lớn hơn giờ bắt đầu!",
                           ),
-                        );
-                      }
-                    });
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                      return;
+                    }
+
+                    setState(() => selectedEndTime = valueEndtime);
+
+                    // Pass end time data into parent widget
+                    widget.onEndTimeChanged?.call(valueEndtime);
                   },
                 ),
               ),
@@ -397,16 +383,11 @@ class _WorkingTimeSectionState extends State<WorkingTimeSection> {
                       ? next7Days[selectedIndex].add(const Duration(days: 7))
                       : null;
 
-                  // Pass data into parent widget
-                  if (widget.onTimeChanged != null) {
-                    widget.onTimeChanged!(
-                      selectedStartTime,
-                      selectedEndTime,
-                      selectedPrice,
-                      isRecurring,
-                      recurringEndDate,
-                    );
-                  }
+                  // Pass recurring data into parent widget
+                  widget.onRecurringChanged?.call(
+                    isRecurring,
+                    recurringEndDate,
+                  );
                 },
               ),
             ],

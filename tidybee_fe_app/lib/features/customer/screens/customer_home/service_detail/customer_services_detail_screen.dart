@@ -45,9 +45,10 @@ class _CustomerServicesDetailScreenState
   String? _ward;
   TimeOfDay? _startTime;
   TimeOfDay? _endTime;
+  DateTime? _selectedDate;
   double? _estimatedPrice;
   String? _note;
-  bool? _isRecursion;
+  bool? _isRecursion = false;
   DateTime? _recursionDate;
 
   // Create instance object of BookingServices
@@ -130,18 +131,17 @@ class _CustomerServicesDetailScreenState
     }
 
     // Formatter date time
-    final currentTime = DateTime.now();
     final startDateTime = DateTime(
-      currentTime.year,
-      currentTime.month,
-      currentTime.day,
+      _selectedDate!.year,
+      _selectedDate!.month,
+      _selectedDate!.day,
       _startTime!.hour,
       _startTime!.minute,
     );
     final endDateTime = DateTime(
-      currentTime.year,
-      currentTime.month,
-      currentTime.day,
+      _selectedDate!.year,
+      _selectedDate!.month,
+      _selectedDate!.day,
       _endTime!.hour,
       _endTime!.minute,
     );
@@ -155,8 +155,8 @@ class _CustomerServicesDetailScreenState
         "longitude": _longitude,
         "address": _address,
         "city": _city,
-        "district": _district,
-        "ward": _ward,
+        "district": _district ?? "",
+        "ward": _ward ?? "",
       },
       "scheduledStartTime": "${startDateTime.toIso8601String()}Z",
       "scheduledEndTime": "${endDateTime.toIso8601String()}Z",
@@ -250,16 +250,32 @@ class _CustomerServicesDetailScreenState
               // ==== Working time section ====
               WorkingTimeSection(
                 price: widget.price,
-                onTimeChanged:
-                    (start, end, estimatedPrice, recursion, recursionDate) {
-                      setState(() {
-                        _startTime = start;
-                        _endTime = end;
-                        _estimatedPrice = estimatedPrice;
-                        _isRecursion = recursion;
-                        _recursionDate = recursionDate;
-                      });
-                    },
+
+                onPriceChanged: (price, date) {
+                  setState(() {
+                    _estimatedPrice = price;
+                    _selectedDate = date;
+                  });
+                },
+
+                onStartTimeChanged: (start) {
+                  setState(() {
+                    _startTime = start;
+                  });
+                },
+
+                onEndTimeChanged: (end) {
+                  setState(() {
+                    _endTime = end;
+                  });
+                },
+
+                onRecurringChanged: (isRecurring, recurringEndDate) {
+                  setState(() {
+                    _isRecursion = isRecurring;
+                    _recursionDate = recurringEndDate;
+                  });
+                },
               ),
 
               const SizedBox(height: 12),
