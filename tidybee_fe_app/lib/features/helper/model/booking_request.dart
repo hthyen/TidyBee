@@ -4,7 +4,7 @@ class BookingRequest {
   final int serviceType;
   final String title;
   final String description;
-  final int budget;
+  final double budget;
   final DateTime scheduledDate;
   final int estimatedDuration;
   final String locationAddress;

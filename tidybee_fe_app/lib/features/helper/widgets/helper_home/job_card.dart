@@ -7,7 +7,7 @@ class JobCard extends StatelessWidget {
   final String date;
   final String time;
   final int hours;
-  final int salary;
+  final double salary;
   final bool highlight;
 
   const JobCard({
