@@ -7,7 +7,7 @@ import 'package:tidybee_fe_app/features/customer/screens/customer_booking/custom
 import 'package:tidybee_fe_app/features/customer/screens/customer_chat/customer_chat_screen.dart';
 import 'package:tidybee_fe_app/features/customer/screens/customer_bottom_navigate.dart';
 import 'package:tidybee_fe_app/features/customer/screens/customer_home/customer_home_screen.dart';
-import 'package:tidybee_fe_app/features/customer/screens/customer_home/customer_services_detail_screen/customer_services_detail_screen.dart';
+import 'package:tidybee_fe_app/features/customer/screens/customer_home/service_detail/customer_services_detail_screen.dart';
 import 'package:tidybee_fe_app/features/customer/screens/customer_profile/customer_profile_screen.dart';
 import 'package:tidybee_fe_app/features/customer/screens/customer_profile/edit_profile_screen.dart';
 import 'package:tidybee_fe_app/features/customer/screens/customer_profile/address_screen.dart';
@@ -184,9 +184,16 @@ class AppRouter {
           if (state.extra is Map<String, dynamic>) {
             final data = state.extra as Map<String, dynamic>;
             final String title = data["title"] ?? "Dịch vụ";
-            final IconData icon = data["icon"] ?? "";
+            final String price = data["price"] ?? "";
+            final int id = data["id"] ?? 0;
+            final String description = data["description"] ?? "Mô tả";
 
-            return CustomerServicesDetailScreen(title: title, icon: icon);
+            return CustomerServicesDetailScreen(
+              title: title,
+              id: id,
+              price: price,
+              description: description,
+            );
           }
           return const NotFoundPage();
         },
