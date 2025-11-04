@@ -7,6 +7,8 @@ class BookingService {
   final String bookingResponseUrl = dotenv.env['API_BOOKING_RESPONSES'] ?? '';
   final String bookingSearchUrl =
       dotenv.env['API_SEARCH_BOOKINGS_NEARBY'] ?? '';
+  final String bookingAvailableUrl =
+      dotenv.env['API_AVAILABLE_REQUEST_BOOKING'] ?? '';
 
   /// 🔹 Lấy tất cả công việc gần helper (GET)
   Future<List<BookingRequest>> getAllBookings({required String token}) async {
@@ -140,6 +142,38 @@ class BookingService {
     } catch (e) {
       print('⚠️ Exception khi cập nhật phản hồi booking: $e');
       return false;
+    }
+  }
+
+  Future<List<BookingRequest>> getAvailableBookingsForHelper({
+    required String token,
+  }) async {
+    try {
+      final url = Uri.parse(bookingAvailableUrl);
+      final response = await http.get(
+        url,
+        headers: {
+          "Authorization": "Bearer $token",
+          "Accept": "application/json",
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(utf8.decode(response.bodyBytes));
+        final list = decoded['data'] as List?;
+        if (list == null) return [];
+
+        final bookings = list.map((e) => BookingRequest.fromJson(e)).toList();
+        print('Lấy ${bookings.length} việc mới (available for helper)');
+        return bookings;
+      } else {
+        print('Lỗi API available: ${response.statusCode}');
+        print('Body: ${response.body}');
+        return [];
+      }
+    } catch (e) {
+      print('Exception khi lấy việc mới: $e');
+      return [];
     }
   }
 }

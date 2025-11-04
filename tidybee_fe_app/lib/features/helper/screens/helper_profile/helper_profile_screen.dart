@@ -24,14 +24,18 @@ class _HelperProfileScreenState extends State<HelperProfileScreen> {
 
   /// Check if profile is incomplete
   bool _isProfileIncomplete(Helper helper) {
+    final loc = helper.location != null
+        ? helper.location!['address']?.toString()
+        : null;
+
     return helper.description == null ||
         helper.description!.isEmpty ||
         helper.experience == null ||
         helper.experience!.isEmpty ||
         helper.languages == null ||
         helper.languages!.isEmpty ||
-        helper.location == null ||
-        helper.location!.isEmpty ||
+        loc == null ||
+        loc.isEmpty ||
         helper.hourlyRate == null ||
         helper.services == null ||
         helper.services!.isEmpty;
@@ -169,7 +173,9 @@ class _HelperProfileScreenState extends State<HelperProfileScreen> {
                     ),
                     HelperProfileInfoRow(
                       title: 'Khu vực',
-                      value: helper.location ?? '—',
+                      value: helper.location != null
+                          ? helper.location!['address']?.toString() ?? '—'
+                          : '—',
                     ),
                   ],
                 ),

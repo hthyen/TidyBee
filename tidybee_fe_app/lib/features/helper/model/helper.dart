@@ -9,7 +9,7 @@ class Helper {
   final List<String>? services;
   final String? experience;
   final String? languages;
-  final String? location;
+  final Map<String, dynamic>? location;
   final String? workingHoursStart;
   final String? workingHoursEnd;
   final List<String>? workingDays;
@@ -61,11 +61,13 @@ class Helper {
           ? json['reviewCount']
           : int.tryParse(json['reviewCount']?.toString() ?? ''),
       services: json['services'] != null
-          ? List<String>.from(json['services'])
+          ? List<String>.from(json['services'].map((e) => e.toString()))
           : [],
       experience: json['experience'],
       languages: json['languages'],
-      location: json['location'],
+      location: json['location'] != null
+          ? Map<String, dynamic>.from(json['location'])
+          : null,
 
       locationData: json['locationData'] != null
           ? Map<String, dynamic>.from(json['locationData'])
@@ -74,7 +76,7 @@ class Helper {
       workingHoursStart: json['workingHoursStart'],
       workingHoursEnd: json['workingHoursEnd'],
       workingDays: json['workingDays'] != null
-          ? List<String>.from(json['workingDays'])
+          ? List<String>.from(json['workingDays'].map((e) => e.toString()))
           : [],
       backgroundChecked: json['backgroundChecked'] ?? false,
       documents: json['documents'] ?? [],
