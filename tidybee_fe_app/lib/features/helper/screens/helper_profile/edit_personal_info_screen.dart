@@ -36,6 +36,7 @@ class _EditPersonalInfoScreenState extends State<EditPersonalInfoScreen> {
   void initState() {
     super.initState();
 
+    // 1. Text fields
     _descriptionController = TextEditingController(
       text: widget.helper.description ?? '',
     );
@@ -46,24 +47,47 @@ class _EditPersonalInfoScreenState extends State<EditPersonalInfoScreen> {
       text: widget.helper.languages ?? '',
     );
 
-    // Assign location values if available, otherwise empty
-    final loc = widget.helper.locationData;
-    _addressController = TextEditingController(text: loc?['address'] ?? '');
-    _cityController = TextEditingController(text: loc?['city'] ?? '');
-    _districtController = TextEditingController(text: loc?['district'] ?? '');
-    _wardController = TextEditingController(text: loc?['ward'] ?? '');
+    // 2. Location:
+    final loc = widget.helper.location;
+
+    _addressController = TextEditingController(
+      text: loc?['address']?.toString() ?? '',
+    );
+    _cityController = TextEditingController(
+      text: loc?['city']?.toString() ?? '',
+    );
+    _districtController = TextEditingController(
+      text: loc?['district']?.toString() ?? '',
+    );
+    _wardController = TextEditingController(
+      text: loc?['ward']?.toString() ?? '',
+    );
+
     _latitudeController = TextEditingController(
-      text: (loc?['latitude'] ?? 0).toString(),
+      text: loc?['latitude'] != null ? loc!['latitude'].toString() : '',
     );
     _longitudeController = TextEditingController(
-      text: (loc?['longitude'] ?? 0).toString(),
+      text: loc?['longitude'] != null ? loc!['longitude'].toString() : '',
     );
+  }
+
+  @override
+  void dispose() {
+    _descriptionController.dispose();
+    _experienceController.dispose();
+    _languagesController.dispose();
+    _addressController.dispose();
+    _cityController.dispose();
+    _districtController.dispose();
+    _wardController.dispose();
+    _latitudeController.dispose();
+    _longitudeController.dispose();
+    super.dispose();
   }
 
   Future<void> _savePersonalInfo() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // Normalize data before sending to server in correct format
     final updateData = {
       "description": _descriptionController.text.trim(),
       "experience": _experienceController.text.trim(),
@@ -79,21 +103,21 @@ class _EditPersonalInfoScreenState extends State<EditPersonalInfoScreen> {
     };
 
     final success = await _helperServices.updateHelper(
-      widget.token,
-      updateData,
+      token: widget.token,
+      updateData: updateData,
     );
 
-    if (success && mounted) {
+    if (!mounted) return;
+
+    if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("✅ Cập nhật thông tin cá nhân thành công"),
-        ),
+        const SnackBar(content: Text("Cập nhật thông tin cá nhân thành công")),
       );
       Navigator.pop(context, true);
-    } else if (mounted) {
+    } else {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("❌ Cập nhật thất bại")));
+      ).showSnackBar(const SnackBar(content: Text("Cập nhật thất bại")));
     }
   }
 
@@ -110,80 +134,157 @@ class _EditPersonalInfoScreenState extends State<EditPersonalInfoScreen> {
           key: _formKey,
           child: ListView(
             children: [
-              /// Description
+              /// Mô tả
               TextFormField(
                 controller: _descriptionController,
-                decoration: const InputDecoration(labelText: "Mô tả"),
+                decoration: const InputDecoration(
+                  labelText: "Mô tả",
+                  hintText:
+                      "Ví dụ: Tôi chuyên dọn nhà, giặt thảm, vệ sinh máy lạnh...",
+                ),
+                maxLines: 3,
+                validator: (value) => value?.trim().isEmpty == true
+                    ? 'Vui lòng nhập mô tả'
+                    : null,
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 16),
 
-              /// Experience
+              /// Kinh nghiệm
               TextFormField(
                 controller: _experienceController,
-                decoration: const InputDecoration(labelText: "Kinh nghiệm"),
+                decoration: const InputDecoration(
+                  labelText: "Kinh nghiệm",
+                  hintText:
+                      "Ví dụ: 3 năm làm việc tại các hộ gia đình và văn phòng",
+                ),
+                validator: (value) => value?.trim().isEmpty == true
+                    ? 'Vui lòng nhập kinh nghiệm'
+                    : null,
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 16),
 
-              /// Languages
+              /// Ngôn ngữ
               TextFormField(
                 controller: _languagesController,
-                decoration: const InputDecoration(labelText: "Ngôn ngữ"),
+                decoration: const InputDecoration(
+                  labelText: "Ngôn ngữ",
+                  hintText: "Ví dụ: Tiếng Việt, Tiếng Anh giao tiếp",
+                ),
+                validator: (value) => value?.trim().isEmpty == true
+                    ? 'Vui lòng nhập ngôn ngữ'
+                    : null,
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
 
               const Text(
-                "📍 Thông tin khu vực làm việc",
+                "Thông tin khu vực làm việc",
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
-              const Divider(),
+              const Divider(height: 20, thickness: 1),
 
+              /// Địa chỉ
               TextFormField(
                 controller: _addressController,
                 decoration: const InputDecoration(labelText: "Địa chỉ cụ thể"),
+                validator: (value) => value?.trim().isEmpty == true
+                    ? 'Vui lòng nhập địa chỉ'
+                    : null,
               ),
-              TextFormField(
-                controller: _cityController,
-                decoration: const InputDecoration(labelText: "Thành phố"),
+              const SizedBox(height: 12),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _cityController,
+                      decoration: const InputDecoration(labelText: "Thành phố"),
+                      validator: (value) => value?.trim().isEmpty == true
+                          ? 'Vui lòng nhập thành phố'
+                          : null,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _districtController,
+                      decoration: const InputDecoration(
+                        labelText: "Quận/Huyện",
+                      ),
+                      validator: (value) => value?.trim().isEmpty == true
+                          ? 'Vui lòng nhập quận'
+                          : null,
+                    ),
+                  ),
+                ],
               ),
-              TextFormField(
-                controller: _districtController,
-                decoration: const InputDecoration(labelText: "Quận/Huyện"),
-              ),
+              const SizedBox(height: 12),
+
               TextFormField(
                 controller: _wardController,
                 decoration: const InputDecoration(labelText: "Phường/Xã"),
+                validator: (value) => value?.trim().isEmpty == true
+                    ? 'Vui lòng nhập phường'
+                    : null,
               ),
+              const SizedBox(height: 12),
+
               Row(
                 children: [
                   Expanded(
                     child: TextFormField(
                       controller: _latitudeController,
-                      keyboardType: TextInputType.number,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       decoration: const InputDecoration(
                         labelText: "Vĩ độ (latitude)",
+                        hintText: "10.7769",
                       ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty)
+                          return 'Bắt buộc';
+                        final lat = double.tryParse(value);
+                        if (lat == null || lat < -90 || lat > 90)
+                          return 'Vĩ độ không hợp lệ';
+                        return null;
+                      },
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: TextFormField(
                       controller: _longitudeController,
-                      keyboardType: TextInputType.number,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       decoration: const InputDecoration(
                         labelText: "Kinh độ (longitude)",
+                        hintText: "106.7009",
                       ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty)
+                          return 'Bắt buộc';
+                        final lng = double.tryParse(value);
+                        if (lng == null || lng < -180 || lng > 180)
+                          return 'Kinh độ không hợp lệ';
+                        return null;
+                      },
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 32),
 
+              /// Nút lưu
               ElevatedButton.icon(
                 onPressed: _savePersonalInfo,
                 icon: const Icon(Icons.save),
                 label: const Text("Lưu thay đổi"),
                 style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 50),
+                  minimumSize: const Size(double.infinity, 52),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
             ],

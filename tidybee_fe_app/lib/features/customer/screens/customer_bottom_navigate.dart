@@ -5,8 +5,14 @@ import 'package:tidybee_fe_app/core/theme/app_colors.dart';
 class CustomerBottomNavigate extends StatefulWidget {
   final Widget child;
   final String? token;
+  final String? currentUserId;
 
-  const CustomerBottomNavigate({super.key, required this.child, this.token});
+  const CustomerBottomNavigate({
+    super.key,
+    required this.child,
+    this.token,
+    this.currentUserId,
+  });
 
   @override
   State<CustomerBottomNavigate> createState() => _CustomerBottomNavigateState();
@@ -29,8 +35,11 @@ class _CustomerBottomNavigateState extends State<CustomerBottomNavigate> {
     if (index != _currentIndex) {
       setState(() => _currentIndex = index);
 
-      // Transmission token
-      context.go(_routes[index], extra: widget.token);
+      // Transmission token & currentUserId
+      context.go(
+        _routes[index],
+        extra: {'token': widget.token, 'currentUserId': widget.currentUserId},
+      );
     }
   }
 

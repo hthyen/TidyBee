@@ -28,19 +28,17 @@ class Booking {
       id: json['id']?.toString(),
       bookingRequestId: json['bookingRequestId']?.toString(),
       helperId: json['helperId']?.toString(),
-      proposedPrice: json['proposedPrice'] is int
-          ? json['proposedPrice']
-          : int.tryParse(json['proposedPrice']?.toString() ?? ''),
-      message: json['message'],
+      proposedPrice: _parseInt(json['proposedPrice']),
+      message: json['message']?.toString(),
       responseDate: json['responseDate'] != null
-          ? DateTime.tryParse(json['responseDate'])
+          ? DateTime.tryParse(json['responseDate'].toString())
           : null,
-      isAccepted: json['isAccepted'] ?? false,
+      isAccepted: json['isAccepted'] as bool? ?? false,
       createdAt: json['createdAt'] != null
-          ? DateTime.tryParse(json['createdAt'])
+          ? DateTime.tryParse(json['createdAt'].toString())
           : null,
       helperInfo: json['helperInfo'] != null
-          ? Helper.fromJson(json['helperInfo'])
+          ? Helper.fromJson({'data': json['helperInfo']})
           : null,
     );
   }
@@ -55,12 +53,19 @@ class Booking {
       "responseDate": responseDate?.toIso8601String(),
       "isAccepted": isAccepted,
       "createdAt": createdAt?.toIso8601String(),
-      "helperInfo": helperInfo?.toJson(),
+      if (helperInfo != null) "helperInfo": helperInfo!.toJson(),
     };
+  }
+
+  static int? _parseInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value);
+    return null;
   }
 }
 
-extension on Helper {
+extension HelperJson on Helper {
   Map<String, dynamic> toJson() {
     return {
       "id": id,
@@ -82,7 +87,6 @@ extension on Helper {
       "createdAt": createdAt?.toIso8601String(),
       "helperName": helperName,
       "helperAvatar": helperAvatar,
-      "locationData": locationData,
     };
   }
 }

@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:tidybee_fe_app/features/auth/screens/login_screen.dart';
 import 'package:tidybee_fe_app/features/auth/screens/register_screen.dart';
 import 'package:tidybee_fe_app/features/customer/screens/customer_booking/customer_booking_screen.dart';
-import 'package:tidybee_fe_app/features/customer/screens/customer_chat/customer_chat_screen.dart';
 import 'package:tidybee_fe_app/features/customer/screens/customer_bottom_navigate.dart';
 import 'package:tidybee_fe_app/features/customer/screens/customer_home/customer_home_screen.dart';
 import 'package:tidybee_fe_app/features/customer/screens/customer_home/service_detail/customer_services_detail_screen.dart';
@@ -16,11 +15,12 @@ import 'package:tidybee_fe_app/features/customer/screens/customer_profile/wallet
 import 'package:tidybee_fe_app/features/customer/screens/customer_profile/voucher_screen.dart';
 import 'package:tidybee_fe_app/features/helper/screens/helper_booking/helper_booking_screen.dart';
 import 'package:tidybee_fe_app/features/helper/screens/helper_bottom_navigate.dart';
-import 'package:tidybee_fe_app/features/helper/screens/helper_chat/helper_chat_screen.dart';
 import 'package:tidybee_fe_app/features/helper/screens/helper_home/helper_home_screen.dart';
 import 'package:tidybee_fe_app/features/helper/screens/helper_profile/helper_profile_screen.dart';
 import 'package:tidybee_fe_app/features/helper/screens/helper_profile/edit_personal_info_screen.dart';
 import 'package:tidybee_fe_app/features/helper/screens/helper_profile/edit_work_info_screen.dart';
+import 'package:tidybee_fe_app/features/chat/screen/chat_list_screen.dart';
+import 'package:tidybee_fe_app/features/chat/screen/chat_screen.dart';
 import 'package:tidybee_fe_app/features/not_found/not_found_page.dart';
 import '../../features/auth/screens/forgot_password_screen.dart';
 import '../../features/auth/screens/otp_verification_screen.dart';
@@ -85,10 +85,23 @@ class AppRouter {
         navigatorKey: _rootCustomerNavigatorKey,
         builder: (context, state, child) {
           // Take token from state.extra
-          final token = state.extra is String ? state.extra as String : null;
+          final extra = state.extra;
+          String? token;
+          String? currentUserId;
+
+          if (extra is Map<String, dynamic>) {
+            token = extra['token'] as String?;
+            currentUserId = extra['currentUserId'] as String?;
+          } else if (extra is String) {
+            token = extra; // fallback cũ
+          }
 
           // Push token into CustomerBottomNavigate
-          return CustomerBottomNavigate(token: token, child: child);
+          return CustomerBottomNavigate(
+            token: token,
+            currentUserId: currentUserId,
+            child: child,
+          );
         },
         routes: [
           GoRoute(
@@ -108,12 +121,12 @@ class AppRouter {
             path: "/customer-chat",
             name: "customer-chat",
             builder: (context, state) {
-              // Take token from parent widget (CustomerBottomNavigate)
-              final bottomWidget = context
+              final bottom = context
                   .findAncestorWidgetOfExactType<CustomerBottomNavigate>();
-              final token = bottomWidget?.token ?? '';
-
-              return CustomerChatScreen(token: token);
+              return ChatListScreen(
+                token: bottom?.token ?? '',
+                currentUserId: bottom?.currentUserId ?? '',
+              );
             },
           ),
 
@@ -204,10 +217,22 @@ class AppRouter {
         navigatorKey: _rootHelperNavigatorKey,
         builder: (context, state, child) {
           // Take token from state.extra
-          final token = state.extra is String ? state.extra as String : null;
+          final extra = state.extra;
+          String? token;
+          String? currentUserId;
 
+          if (extra is Map<String, dynamic>) {
+            token = extra['token'] as String?;
+            currentUserId = extra['currentUserId'] as String?;
+          } else if (extra is String) {
+            token = extra; // fallback cũ
+          }
           // Push token into HelperBottomNavigate
-          return HelperBottomNavigate(token: token, child: child);
+          return HelperBottomNavigate(
+            token: token,
+            currentUserId: currentUserId,
+            child: child,
+          );
         },
         routes: [
           GoRoute(
@@ -227,15 +252,14 @@ class AppRouter {
             path: "/helper-chat",
             name: "helper-chat",
             builder: (context, state) {
-              // Take token from parent widget (HelperBottomNavigate)
-              final bottomWidget = context
+              final bottom = context
                   .findAncestorWidgetOfExactType<HelperBottomNavigate>();
-              final token = bottomWidget?.token ?? '';
-
-              return HelperChatScreen(token: token);
+              return ChatListScreen(
+                token: bottom?.token ?? '',
+                currentUserId: bottom?.currentUserId ?? '',
+              );
             },
           ),
-
           GoRoute(
             path: "/helper-booking",
             name: "helper-booking",
@@ -287,6 +311,19 @@ class AppRouter {
             ],
           ),
         ],
+      ),
+      GoRoute(
+        path: "/chat-detail",
+        name: "chat-detail",
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>;
+          return ChatScreen(
+            token: extra['token'] as String,
+            roomId: extra['roomId'] as String,
+            opponentName: extra['opponentName'] as String,
+            currentUserId: extra['currentUserId'] as String,
+          );
+        },
       ),
     ],
 

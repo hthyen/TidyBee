@@ -5,8 +5,14 @@ import 'package:tidybee_fe_app/core/theme/app_colors.dart';
 class HelperBottomNavigate extends StatefulWidget {
   final Widget child;
   final String? token;
+  final String? currentUserId;
 
-  const HelperBottomNavigate({super.key, required this.child, this.token});
+  const HelperBottomNavigate({
+    super.key,
+    required this.child,
+    this.token,
+    this.currentUserId,
+  });
 
   @override
   State<HelperBottomNavigate> createState() => _HelperBottomNavigateState();
@@ -30,7 +36,10 @@ class _HelperBottomNavigateState extends State<HelperBottomNavigate> {
       setState(() => _currentIndex = index);
 
       // Transmission token
-      context.go(_routes[index], extra: widget.token);
+      context.go(
+        _routes[index],
+        extra: {'token': widget.token, 'currentUserId': widget.currentUserId},
+      );
     }
   }
 

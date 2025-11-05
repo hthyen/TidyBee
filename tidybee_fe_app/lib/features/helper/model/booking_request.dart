@@ -1,5 +1,3 @@
-// features/helper/model/booking_request.dart
-
 class BookingRequest {
   final String? id;
   final String? title;

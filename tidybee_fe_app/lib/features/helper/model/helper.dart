@@ -6,20 +6,18 @@ class Helper {
   final bool? isAvailable;
   final double? rating;
   final int? reviewCount;
-  final List<String>? services;
+  final List<int>? services;
   final String? experience;
   final String? languages;
   final Map<String, dynamic>? location;
   final String? workingHoursStart;
   final String? workingHoursEnd;
-  final List<String>? workingDays;
+  final List<int>? workingDays;
   final bool? backgroundChecked;
   final List<dynamic>? documents;
   final DateTime? createdAt;
   final String? helperName;
   final String? helperAvatar;
-
-  final Map<String, dynamic>? locationData;
 
   Helper({
     this.id,
@@ -41,50 +39,50 @@ class Helper {
     this.createdAt,
     this.helperName,
     this.helperAvatar,
-    this.locationData,
   });
 
-  // Parse data from JSON into model
   factory Helper.fromJson(Map<String, dynamic> json) {
+    final data = json['data'] ?? json;
+
     return Helper(
-      id: json['id']?.toString(),
-      userId: json['userId']?.toString(),
-      description: json['description'],
-      hourlyRate: json['hourlyRate'] is int
-          ? json['hourlyRate']
-          : int.tryParse(json['hourlyRate']?.toString() ?? ''),
-      isAvailable: json['isAvailable'],
-      rating: json['rating'] != null
-          ? double.tryParse(json['rating'].toString())
+      id: data['id']?.toString(),
+      userId: data['userId']?.toString(),
+      description: data['description']?.toString().trim(),
+      hourlyRate: _parseInt(data['hourlyRate']),
+      isAvailable: data['isAvailable'] as bool? ?? false,
+      rating: data['rating'] != null
+          ? double.tryParse(data['rating'].toString())
           : null,
-      reviewCount: json['reviewCount'] is int
-          ? json['reviewCount']
-          : int.tryParse(json['reviewCount']?.toString() ?? ''),
-      services: json['services'] != null
-          ? List<String>.from(json['services'].map((e) => e.toString()))
-          : [],
-      experience: json['experience'],
-      languages: json['languages'],
-      location: json['location'] != null
-          ? Map<String, dynamic>.from(json['location'])
+      reviewCount: _parseInt(data['reviewCount']),
+      services: data['services'] != null
+          ? List<int>.from(data['services'].map((e) => _parseInt(e) ?? 0))
           : null,
-
-      locationData: json['locationData'] != null
-          ? Map<String, dynamic>.from(json['locationData'])
+      experience: data['experience']?.toString().trim(),
+      languages: data['languages']?.toString().trim(),
+      location: data['location'] is Map
+          ? Map<String, dynamic>.from(data['location'])
           : null,
-
-      workingHoursStart: json['workingHoursStart'],
-      workingHoursEnd: json['workingHoursEnd'],
-      workingDays: json['workingDays'] != null
-          ? List<String>.from(json['workingDays'].map((e) => e.toString()))
-          : [],
-      backgroundChecked: json['backgroundChecked'] ?? false,
-      documents: json['documents'] ?? [],
-      createdAt: json['createdAt'] != null
-          ? DateTime.tryParse(json['createdAt'])
+      workingHoursStart: data['workingHoursStart']?.toString(),
+      workingHoursEnd: data['workingHoursEnd']?.toString(),
+      workingDays: data['workingDays'] != null
+          ? List<int>.from(data['workingDays'].map((e) => _parseInt(e) ?? 0))
           : null,
-      helperName: json['helperName'],
-      helperAvatar: json['helperAvatar'],
+      backgroundChecked: data['backgroundChecked'] as bool? ?? false,
+      documents: data['documents'] is List
+          ? List<dynamic>.from(data['documents'])
+          : null,
+      createdAt: data['createdAt'] != null
+          ? DateTime.tryParse(data['createdAt'].toString())
+          : null,
+      helperName: data['helperName']?.toString(),
+      helperAvatar: data['helperAvatar']?.toString(),
     );
+  }
+
+  static int? _parseInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value);
+    return null;
   }
 }

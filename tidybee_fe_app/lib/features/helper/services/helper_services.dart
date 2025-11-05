@@ -6,6 +6,9 @@ import 'package:tidybee_fe_app/features/helper/model/helper.dart';
 class HelperServices {
   final String helperProfileUrl = dotenv.env['API_HELPER_BY_ID'] ?? '';
 
+  final String updateHelperProfileUrl =
+      dotenv.env['API_HELPER_PROFILE_UPDATE'] ?? '';
+
   // Retrieve helper information by userId
   Future<Helper?> getHelper(String token, String userId) async {
     try {
@@ -34,13 +37,14 @@ class HelperServices {
   }
 
   // Create or update Helper Profile
-  Future<bool> updateHelper(
-    String token,
-    Map<String, dynamic> updateData,
-  ) async {
+  Future<bool> updateHelper({
+    required String token,
+    required Map<String, dynamic> updateData,
+  }) async {
     try {
-      final url = Uri.parse(helperProfileUrl);
-      final response = await http.post(
+      final url = Uri.parse(updateHelperProfileUrl);
+
+      final response = await http.put(
         url,
         headers: {
           "Authorization": "Bearer $token",
@@ -50,16 +54,16 @@ class HelperServices {
         body: jsonEncode(updateData),
       );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        print('Cập nhật/đăng ký helper profile thành công');
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        print('Cập nhật thành công');
         return true;
       } else {
-        print('Lỗi cập nhật helper profile: ${response.statusCode}');
-        print('Body lỗi: ${response.body}');
+        print('Lỗi: ${response.statusCode}');
+        print('Body: ${response.body}');
         return false;
       }
     } catch (e) {
-      print('Lỗi exception khi cập nhật helper: $e');
+      print('Exception: $e');
       return false;
     }
   }

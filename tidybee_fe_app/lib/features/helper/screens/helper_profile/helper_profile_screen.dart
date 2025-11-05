@@ -23,22 +23,32 @@ class _HelperProfileScreenState extends State<HelperProfileScreen> {
   final HelperServices _helperServices = HelperServices();
 
   /// Check if profile is incomplete
-  bool _isProfileIncomplete(Helper helper) {
-    final loc = helper.location != null
-        ? helper.location!['address']?.toString()
-        : null;
+  bool _isProfileIncomplete(Helper? helper) {
+    if (helper == null) {
+      print('Profile incomplete: Helper is null');
+      return true;
+    }
 
-    return helper.description == null ||
-        helper.description!.isEmpty ||
-        helper.experience == null ||
-        helper.experience!.isEmpty ||
-        helper.languages == null ||
-        helper.languages!.isEmpty ||
-        loc == null ||
-        loc.isEmpty ||
-        helper.hourlyRate == null ||
-        helper.services == null ||
-        helper.services!.isEmpty;
+    // 1. Text fields
+    final hasDescription = helper.description?.trim().isNotEmpty == true;
+    final hasExperience = helper.experience?.trim().isNotEmpty == true;
+    final hasLanguages = helper.languages?.trim().isNotEmpty == true;
+
+    // 2. Location: DỮ LIỆU TỪ API LÀ `location`
+    final address = helper.location?['address']?.toString().trim();
+    final hasLocation = address?.isNotEmpty == true;
+
+    // 4. Services: List<int>?
+    final hasServices = helper.services != null && helper.services!.isNotEmpty;
+
+    final isComplete =
+        hasDescription &&
+        hasExperience &&
+        hasLanguages &&
+        hasLocation &&
+        hasServices;
+
+    return !isComplete;
   }
 
   /// Fetch helper info from API
