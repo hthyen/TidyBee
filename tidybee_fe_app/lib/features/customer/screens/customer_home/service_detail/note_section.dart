@@ -68,7 +68,6 @@ class _NoteSectionState extends State<NoteSection> {
               if (widget.onChanged != null) {
                 widget.onChanged!(value);
               }
-              ;
             },
           ),
         ],
