@@ -6,6 +6,7 @@ import 'package:tidybee_fe_app/features/customer/model/booking.dart';
 
 class BookingServices {
   final String requestBookingUrl = dotenv.env['API_REQUEST_BOOKING'] ?? '';
+  final String getBooking = dotenv.env['API_GET_BOOKING'] ?? '';
 
   // Future - asynchronous createBooking
   Future<Booking?> createBooking(
@@ -27,6 +28,40 @@ class BookingServices {
     if (response.statusCode == 200 || response.statusCode == 201) {
       final Map<String, dynamic> data = jsonDecode(response.body);
       return Booking.fromJson(data['data']);
+    } else {
+      final errorMessage = _extractErrorMessage(response);
+      throw Exception(errorMessage);
+    }
+  }
+
+  // Future - asynchronous get user booking
+  Future<List<Booking>> getUserBooking(String token) async {
+    final url = Uri.parse('$getBooking');
+
+    final response = await http.get(
+      url,
+      headers: {
+        "Authorization": "Bearer $token",
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+    );
+
+    if (response.statusCode == 200) {
+      // Forces to use UTF-8 encoding to avoid issues with special characters (Vietnamese)
+      final data = jsonDecode(utf8.decode(response.bodyBytes));
+      final bookingsData = data['data']['bookings'];
+
+      if (bookingsData == null || bookingsData is! List) {
+        throw Exception('Lỗi lấy booking');
+      }
+
+      // Parse into booking model
+      final bookings = bookingsData
+          .map<Booking>((json) => Booking.fromJson(json))
+          .toList();
+
+      return bookings;
     } else {
       final errorMessage = _extractErrorMessage(response);
       throw Exception(errorMessage);

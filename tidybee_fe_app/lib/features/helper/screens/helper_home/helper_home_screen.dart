@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tidybee_fe_app/core/theme/app_colors.dart';
-import 'package:tidybee_fe_app/core/common_services/format_money.dart';
+import 'package:tidybee_fe_app/core/common_services/utils_method.dart';
 import 'package:tidybee_fe_app/features/helper/model/helper.dart';
 import 'package:tidybee_fe_app/features/helper/services/helper_services.dart';
 import 'package:tidybee_fe_app/features/helper/services/earnings_service.dart';
