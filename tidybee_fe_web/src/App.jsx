@@ -1,9 +1,14 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
 import Users from "./pages/Users";
 import Orders from "./pages/Orders";
-import Services from "./pages/Services";
+import Booking from "./pages/Booking";
 import Payments from "./pages/Payments";
 import Reviews from "./pages/Reviews";
 import AdminLayout from "./components/AdminLayout";
@@ -30,7 +35,7 @@ function App() {
           <Route index element={<AdminDashboard />} />
           <Route path="users" element={<Users />} />
           <Route path="orders" element={<Orders />} />
-          <Route path="services" element={<Services />} />
+          <Route path="booking" element={<Booking />} />
           <Route path="payments" element={<Payments />} />
           <Route path="reviews" element={<Reviews />} />
         </Route>

@@ -30,10 +30,10 @@ export default function Sidebar() {
           Users
         </Link>
         <Link
-          to="/admin/services"
+          to="/admin/booking"
           className="text-gray-700 hover:text-green-500 text-lg"
         >
-          Services
+          Booking
         </Link>
         <Link
           to="/admin/orders"

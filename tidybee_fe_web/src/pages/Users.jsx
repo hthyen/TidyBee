@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import toast from "react-hot-toast";
+import { API } from "../services/api";
 
 export default function Users() {
   const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
-  const [detailLoading, setDetailLoading] = useState(false);
-  const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({});
-  const [isSearching, setIsSearching] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
 
-  const API_URL = "http://3.107.252.215:8080/api/Users";
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const roleMap = {
     1: "Customer",
@@ -20,113 +21,144 @@ export default function Users() {
     3: "Admin",
   };
 
-  // 📦 Lấy danh sách người dùng
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          setError("❌ Chưa đăng nhập!");
-          setLoading(false);
-          return;
-        }
-
-        const response = await axios.get(API_URL, {
+  // Lấy danh sách người dùng
+  const fetchUsers = async (page = 1) => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `${API.USER}/Users?page=${page}&pageSize=10`,
+        {
           headers: { Authorization: `Bearer ${token}` },
-        });
+        }
+      );
 
-        const data = response.data?.data?.users || [];
-        setUsers(Array.isArray(data) ? data : []);
-      } catch (err) {
-        setError(
-          err.response?.data?.message ||
-            err.message ||
-            "Không thể tải danh sách người dùng!"
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
+      const usersData = response.data?.data?.users || [];
+      const total = response.data?.data?.totalPages || 1;
 
-    fetchUsers();
-  }, []);
+      setUsers(Array.isArray(usersData) ? usersData : []);
+      setTotalPages(total);
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message ||
+          "Không thể tải danh sách người dùng! Vui lòng thử lại."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // 📄 Xem chi tiết user
+  useEffect(() => {
+    fetchUsers(page);
+  }, [page]);
+
+  // Xem chi tiết user
   const handleUserClick = async (id) => {
     setDetailLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(`${API_URL}/${id}`, {
+      const response = await axios.get(`${API.USER}/Users/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setSelectedUser(response.data.data);
-      setFormData(response.data.data);
+      const data = response.data?.data;
+      setSelectedUser(data);
+      setFormData(data);
       setEditMode(false);
     } catch (err) {
       console.error("❌ Lỗi tải user chi tiết:", err);
-      alert("Không thể tải thông tin chi tiết!");
+      toast.error("Không thể tải thông tin chi tiết!");
     } finally {
       setDetailLoading(false);
     }
   };
 
-  // 🗑️ Xoá user
+  // Xoá user
   const handleDeleteUser = async (id) => {
     if (!window.confirm("Bạn có chắc muốn xoá người dùng này?")) return;
 
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`${API_URL}/${id}`, {
+      await axios.delete(`${API.USER}/Users/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setUsers(users.filter((u) => u.id !== id));
+
+      toast.success("🗑️ Xoá người dùng thành công!");
+      fetchUsers(page);
       setSelectedUser(null);
-      alert("🗑️ Xoá người dùng thành công!");
-    } catch (err) {
-      alert("Không thể xoá người dùng!");
-      console.error(err);
+    } catch (error) {
+      console.error("❌ Lỗi khi xoá user:", error);
+      toast.error(error.response?.data?.message || "Không thể xoá người dùng!");
     }
   };
 
-  // ✏️ Cập nhật user
+  // Cập nhật user
   const handleUpdateUser = async () => {
     try {
       const token = localStorage.getItem("token");
-      await axios.put(`${API_URL}/${selectedUser.id}`, formData, {
-        headers: { Authorization: `Bearer ${token}` },
+      const payload = {
+        email: formData.email || selectedUser.email,
+        firstName: formData.firstName || "",
+        lastName: formData.lastName || "",
+        phoneNumber: formData.phoneNumber || "",
+        gender: formData.gender || "other",
+        avatar: formData.avatar || "",
+        role: Number(formData.role) || 1,
+        status: Number(formData.status) || 1,
+      };
+
+      await axios.put(`${API.USER}/Users/${selectedUser.id}`, payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
-      alert("✅ Cập nhật người dùng thành công!");
+
+      toast.success("✅ Cập nhật người dùng thành công!");
       setEditMode(false);
+      handleUserClick(selectedUser.id);
     } catch (err) {
-      alert("❌ Cập nhật thất bại!");
-      console.error(err);
+      console.error("❌ Cập nhật thất bại:", err.response?.data || err.message);
+
+      if (err.response?.data?.errors) {
+        console.group("📋 Validation Errors:");
+        Object.entries(err.response.data.errors).forEach(
+          ([field, messages]) => {
+            console.log(`- ${field}: ${messages.join(", ")}`);
+          }
+        );
+        console.groupEnd();
+      }
+
+      toast.error(
+        `❌ Cập nhật thất bại: ${
+          err.response?.data?.title || "Kiểm tra console để biết chi tiết."
+        }`
+      );
     }
   };
 
-  // ⚙️ Lọc người dùng
-  const filteredUsers = users
-    .filter((user) => user.role === 1 || user.role === 2)
-    .filter((user) => {
-      const displayName =
-        user.fullName ||
-        user.name ||
-        (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : "");
-      return (
-        displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    });
+  // Lọc người dùng
+  const filteredUsers = users.filter((u) => {
+    const displayName =
+      u.fullName ||
+      u.name ||
+      (u.firstName && u.lastName ? `${u.firstName} ${u.lastName}` : "");
+    return (
+      displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      u.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
 
   if (loading)
-    return <p className="text-gray-500 italic">Đang tải danh sách người dùng...</p>;
-
-  if (error) return <p className="text-red-600 font-semibold">⚠️ {error}</p>;
+    return <p className="italic text-gray-500">Đang tải người dùng...</p>;
 
   return (
     <div className="flex gap-6">
-      {/* Bảng danh sách người dùng */}
+      {/* Danh sách user */}
       <div className="flex-1">
-        <h1 className="text-2xl font-bold mb-6 text-gray-800">Quản lý người dùng</h1>
+        <h1 className="text-2xl font-bold mb-6 text-gray-800">
+          Quản lý người dùng
+        </h1>
 
         <div className="mb-6 flex gap-3 items-center">
           <input
@@ -160,7 +192,10 @@ export default function Users() {
                       ? `${user.firstName} ${user.lastName}`
                       : "—");
                   return (
-                    <tr key={user.id} className="border-t hover:bg-gray-50 transition">
+                    <tr
+                      key={user.id}
+                      className="border-t hover:bg-gray-50 transition"
+                    >
                       <td
                         className="p-3 text-blue-600 cursor-pointer hover:underline"
                         onClick={() => handleUserClick(user.id)}
@@ -184,7 +219,10 @@ export default function Users() {
                 })
               ) : (
                 <tr>
-                  <td colSpan="6" className="text-center p-4 text-gray-500">
+                  <td
+                    colSpan="6"
+                    className="text-center p-4 text-gray-500 italic"
+                  >
                     Không có người dùng nào.
                   </td>
                 </tr>
@@ -192,9 +230,30 @@ export default function Users() {
             </tbody>
           </table>
         </div>
+
+        {/* Phân trang */}
+        <div className="flex justify-center mt-6 gap-3">
+          <button
+            disabled={page === 1}
+            onClick={() => setPage(page - 1)}
+            className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
+          >
+            Trước
+          </button>
+          <span className="font-medium text-gray-700">
+            Trang {page} / {totalPages}
+          </span>
+          <button
+            disabled={page >= totalPages}
+            onClick={() => setPage(page + 1)}
+            className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
+          >
+            Sau
+          </button>
+        </div>
       </div>
 
-      {/* Panel chi tiết user */}
+      {/* Panel chi tiết */}
       <div className="w-96 bg-white rounded-lg shadow p-6">
         {detailLoading ? (
           <p>Đang tải chi tiết người dùng...</p>
@@ -204,13 +263,25 @@ export default function Users() {
 
             {!editMode ? (
               <div className="space-y-2">
-                <p><strong>ID:</strong> {selectedUser.id}</p>
-                <p><strong>Họ và tên:</strong> {selectedUser.firstName} {selectedUser.lastName}</p>
-                <p><strong>Email:</strong> {selectedUser.email}</p>
-                <p><strong>Số điện thoại:</strong> {selectedUser.phoneNumber || "—"}</p>
-                <p><strong>Vai trò:</strong> {roleMap[selectedUser.role] || "—"}</p>
-                <p><strong>Trạng thái:</strong> {selectedUser.status}</p>
-                <p><strong>Ngày sinh:</strong> {selectedUser.dateOfBirth?.split("T")[0] || "—"}</p>
+                <p>
+                  <strong>Họ và tên:</strong> {selectedUser.firstName}{" "}
+                  {selectedUser.lastName}
+                </p>
+                <p>
+                  <strong>Email:</strong> {selectedUser.email}
+                </p>
+                <p>
+                  <strong>SĐT:</strong> {selectedUser.phoneNumber || "—"}
+                </p>
+                <p>
+                  <strong>Giới tính:</strong> {selectedUser.gender || "—"}
+                </p>
+                <p>
+                  <strong>Vai trò:</strong> {roleMap[selectedUser.role] || "—"}
+                </p>
+                <p>
+                  <strong>Trạng thái:</strong> {selectedUser.status}
+                </p>
 
                 <div className="mt-4 flex gap-3">
                   <button
@@ -230,17 +301,30 @@ export default function Users() {
             ) : (
               <div className="space-y-3">
                 <label className="block">
-                  <span className="text-gray-700">Email</span>
+                  <span className="text-gray-700">Họ</span>
                   <input
-                    type="email"
-                    value={formData.email || ""}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    type="text"
+                    value={formData.firstName || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, firstName: e.target.value })
+                    }
+                    className="w-full border rounded px-3 py-2 mt-1"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-gray-700">Tên</span>
+                  <input
+                    type="text"
+                    value={formData.lastName || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, lastName: e.target.value })
+                    }
                     className="w-full border rounded px-3 py-2 mt-1"
                   />
                 </label>
 
                 <label className="block">
-                  <span className="text-gray-700">Số điện thoại</span>
+                  <span className="text-gray-700">SĐT</span>
                   <input
                     type="text"
                     value={formData.phoneNumber || ""}
@@ -249,6 +333,21 @@ export default function Users() {
                     }
                     className="w-full border rounded px-3 py-2 mt-1"
                   />
+                </label>
+
+                <label className="block">
+                  <span className="text-gray-700">Giới tính</span>
+                  <select
+                    value={formData.gender || "other"}
+                    onChange={(e) =>
+                      setFormData({ ...formData, gender: e.target.value })
+                    }
+                    className="w-full border rounded px-3 py-2 mt-1"
+                  >
+                    <option value="male">Nam</option>
+                    <option value="female">Nữ</option>
+                    <option value="other">Khác</option>
+                  </select>
                 </label>
 
                 <div className="flex gap-3 mt-4">
@@ -269,7 +368,9 @@ export default function Users() {
             )}
           </div>
         ) : (
-          <p className="text-gray-500 italic">Chọn một người dùng để xem chi tiết</p>
+          <p className="italic text-gray-500">
+            Chọn một người dùng để xem chi tiết
+          </p>
         )}
       </div>
     </div>
