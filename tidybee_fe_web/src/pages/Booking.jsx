@@ -40,20 +40,22 @@ export default function Booking() {
   const handleUpdateStatus = async (bookingId, newStatus) => {
     const token = localStorage.getItem("token");
     const booking = bookings.find((b) => b.id === bookingId);
-    const finalPrice =
-      newStatus === 3 ? booking?.estimatedPrice || 0 : booking?.finalPrice || 0;
+
+    const payload = {
+      newStatus,
+      adminNotes: "[Admin] Cập nhật trạng thái",
+    };
+
+    // Chỉ gửi finalPrice khi hoàn thành
+    if (newStatus === 3) {
+      payload.finalPrice = booking?.estimatedPrice || 0;
+    }
 
     try {
       await axios.patch(
-        `${API.BOOKING}/Bookings/admin/${bookingId}/status`, // ✔ Sửa URL
-        {
-          newStatus,
-          adminNotes: "[Admin] Cập nhật trạng thái",
-          finalPrice,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        `${API.BOOKING}/Bookings/admin/${bookingId}/status`,
+        payload,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       toast.success("✅ Cập nhật trạng thái thành công!");
