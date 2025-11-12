@@ -55,15 +55,11 @@ class HelperServices {
       );
 
       if (response.statusCode == 200 || response.statusCode == 204) {
-        print('Cập nhật thành công');
         return true;
       } else {
-        print('Lỗi: ${response.statusCode}');
-        print('Body: ${response.body}');
         return false;
       }
     } catch (e) {
-      print('Exception: $e');
       return false;
     }
   }

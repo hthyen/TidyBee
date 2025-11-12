@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tidybee_fe_app/core/theme/app_colors.dart';
 import 'package:tidybee_fe_app/core/common_services/format_money.dart';
@@ -61,7 +60,6 @@ class _HelperHomeScreenState extends State<HelperHomeScreen> {
         });
       }
     } catch (e) {
-      print('Lỗi load: $e');
       if (mounted && !_isDisposed) {
         setState(() => _isLoading = false);
       }

@@ -5,7 +5,7 @@ import 'package:tidybee_fe_app/features/chat/model/chat_message.dart';
 
 class ChatBubble extends StatelessWidget {
   final ChatMessage message;
-  final String currentUserId; // TRUYỀN VÀO ĐỂ TÍNH isMe
+  final String currentUserId;
 
   const ChatBubble({
     super.key,
@@ -15,7 +15,7 @@ class ChatBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isMe = message.senderId == currentUserId; // CHUẨN DỰ ÁN THẬT
+    final bool isMe = message.senderId == currentUserId;
     final time = message.sentAt != null
         ? DateFormat('HH:mm').format(message.sentAt!)
         : "??:??";

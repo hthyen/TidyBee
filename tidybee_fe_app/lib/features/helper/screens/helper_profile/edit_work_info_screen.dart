@@ -85,30 +85,6 @@ class _EditWorkInfoScreenState extends State<EditWorkInfoScreen> {
   String _formatTime24h(TimeOfDay t) =>
       '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}:00';
 
-  Future<void> _pickTime(bool isStart) async {
-    final init = isStart
-        ? (_startTime ?? const TimeOfDay(hour: 8, minute: 0))
-        : (_endTime ?? const TimeOfDay(hour: 17, minute: 0));
-
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: init,
-      builder: (context, child) => Theme(
-        data: Theme.of(context).copyWith(
-          colorScheme: const ColorScheme.light(primary: AppColors.primary),
-          textButtonTheme: TextButtonThemeData(
-            style: TextButton.styleFrom(foregroundColor: AppColors.primary),
-          ),
-        ),
-        child: child!,
-      ),
-    );
-
-    if (picked != null) {
-      setState(() => isStart ? _startTime = picked : _endTime = picked);
-    }
-  }
-
   bool _isValidTime() {
     if (_startTime == null || _endTime == null) return false;
     return (_endTime!.hour * 60 + _endTime!.minute) >

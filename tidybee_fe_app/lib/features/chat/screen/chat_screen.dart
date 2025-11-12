@@ -208,8 +208,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           if (showDate) _buildDateHeader(message.sentAt),
                           ChatBubble(
                             message: message,
-                            currentUserId:
-                                widget.currentUserId, // TRUYỀN VÀO ĐỂ TÍNH isMe
+                            currentUserId: widget.currentUserId,
                           ),
                         ],
                       );
