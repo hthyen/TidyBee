@@ -181,18 +181,17 @@ class _EditWorkInfoScreenState extends State<EditWorkInfoScreen> {
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              _section("Giá theo giờ"),
-              _textField(
-                _hourlyRateController,
-                "Nhập giá (VNĐ)",
-                suffix: "VNĐ",
-                validator: (v) =>
-                    v?.isEmpty == true || (double.tryParse(v!) ?? 0) <= 0
-                    ? "Giá phải lớn hơn 0 nhé"
-                    : null,
-              ),
-              const SizedBox(height: 24),
-
+              // _section("Giá theo giờ"),
+              // _textField(
+              //   _hourlyRateController,
+              //   "Nhập giá (VNĐ)",
+              //   suffix: "VNĐ",
+              //   validator: (v) =>
+              //       v?.isEmpty == true || (double.tryParse(v!) ?? 0) <= 0
+              //       ? "Giá phải lớn hơn 0 nhé"
+              //       : null,
+              // ),
+              // const SizedBox(height: 24),
               _section("Dịch vụ cung cấp"),
               _chips(
                 _serviceMap,

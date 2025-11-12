@@ -206,11 +206,11 @@ class _HelperProfileScreenState extends State<HelperProfileScreen> {
                         });
                   },
                   children: [
-                    HelperProfileInfoRow(
-                      title: 'Giá theo giờ',
-                      value:
-                          '${NumberFormat('#,##0').format(helper.hourlyRate ?? 0)} đ',
-                    ),
+                    // HelperProfileInfoRow(
+                    //   title: 'Giá theo giờ',
+                    //   value:
+                    //       '${NumberFormat('#,##0').format(helper.hourlyRate ?? 0)} đ',
+                    // ),
                     HelperProfileInfoRow(
                       title: 'Dịch vụ',
                       value: helper.services?.join(', ') ?? '—',

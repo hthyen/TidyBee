@@ -6,18 +6,22 @@ import 'package:tidybee_fe_app/features/chat/model/chat_message.dart';
 class ChatBubble extends StatelessWidget {
   final ChatMessage message;
   final String currentUserId;
+  final String opponentName;
 
   const ChatBubble({
     super.key,
     required this.message,
     required this.currentUserId,
+    required this.opponentName,
   });
 
   @override
   Widget build(BuildContext context) {
+    // ĐÚNG: Tin nhắn của mình → isMe = true → hiện bên PHẢI
     final bool isMe = message.senderId == currentUserId;
+
     final time = message.sentAt != null
-        ? DateFormat('HH:mm').format(message.sentAt!)
+        ? DateFormat('HH:mm').format(message.sentAt!.toLocal())
         : "??:??";
 
     return Padding(
@@ -27,19 +31,20 @@ class ChatBubble extends StatelessWidget {
             ? MainAxisAlignment.end
             : MainAxisAlignment.start,
         children: [
+          // AVATAR & TÊN: chỉ hiện bên trái nếu là người khác
           if (!isMe) ...[
             CircleAvatar(
               radius: 16,
               backgroundColor: Colors.grey[300],
               child: Text(
-                message.senderName.isNotEmpty
-                    ? message.senderName[0].toUpperCase()
-                    : 'K',
-                style: const TextStyle(fontSize: 12),
+                opponentName.isNotEmpty ? opponentName[0].toUpperCase() : 'K',
+                style: const TextStyle(fontSize: 12, color: Colors.black54),
               ),
             ),
             const SizedBox(width: 8),
           ],
+
+          // BUBBLE
           Flexible(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -66,9 +71,10 @@ class ChatBubble extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (!isMe && message.senderName.isNotEmpty)
+                  // TÊN: chỉ hiện nếu là người khác
+                  if (!isMe)
                     Text(
-                      message.senderName,
+                      opponentName,
                       style: TextStyle(
                         fontSize: 11,
                         color: Colors.grey[600],
@@ -95,6 +101,8 @@ class ChatBubble extends StatelessWidget {
               ),
             ),
           ),
+
+          // AVATAR CỦA MÌNH: chỉ hiện bên phải nếu là mình
           if (isMe) ...[
             const SizedBox(width: 8),
             CircleAvatar(

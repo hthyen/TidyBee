@@ -5,10 +5,11 @@ import 'package:tidybee_fe_app/core/common_widgets/notification_service.dart';
 import 'package:tidybee_fe_app/features/chat/model/chat_room.dart';
 import 'package:tidybee_fe_app/features/chat/services/chat_service.dart';
 import 'package:tidybee_fe_app/features/chat/widget/chat_room_item.dart';
+import 'package:tidybee_fe_app/features/chat/screen/chat_screen.dart';
 
 class ChatListScreen extends StatefulWidget {
   final String token;
-  final String currentUserId;
+  final String currentUserId; // → Đây là CUSTOMER ID
 
   const ChatListScreen({
     super.key,
@@ -34,7 +35,6 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
   Future<void> _loadRooms() async {
     if (!mounted) return;
-
     setState(() => _isLoading = true);
 
     try {
@@ -47,21 +47,11 @@ class _ChatListScreenState extends State<ChatListScreen> {
         _isLoading = false;
       });
     } on FormatException {
-      NotificationService.showError(context, "Dữ liệu từ server không hợp lệ");
-    } on Exception catch (e) {
-      NotificationService.showError(
-        context,
-        "Lỗi tải tin nhắn: ${e.toString()}",
-      );
+      NotificationService.showError(context, "Dữ liệu không hợp lệ");
     } catch (e) {
-      NotificationService.showError(
-        context,
-        "Đã có lỗi xảy ra. Vui lòng thử lại.",
-      );
+      NotificationService.showError(context, "Lỗi: ${e.toString()}");
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -90,15 +80,25 @@ class _ChatListScreenState extends State<ChatListScreen> {
                 itemCount: _rooms.length,
                 itemBuilder: (context, index) {
                   final room = _rooms[index];
+
+                  // === TỰ ĐỘNG LẤY TÊN HELPER ===
+                  final opponentName = room.helperName?.isNotEmpty == true
+                      ? room.helperName!
+                      : "Helper";
+
                   return ChatRoomItem(
                     room: room,
                     currentUserId: widget.currentUserId,
                     onTap: () {
+                      print(
+                        'ChatListScreen - currentUserId: ${widget.currentUserId}',
+                      );
+
                       context.push(
                         '/chat-detail',
                         extra: {
                           'roomId': room.id,
-                          'opponentName': _getOpponentName(room),
+                          'opponentName': opponentName,
                           'token': widget.token,
                           'currentUserId': widget.currentUserId,
                         },
@@ -109,11 +109,5 @@ class _ChatListScreenState extends State<ChatListScreen> {
               ),
             ),
     );
-  }
-
-  String _getOpponentName(ChatRoom room) {
-    return room.customerId == widget.currentUserId
-        ? room.helperName
-        : room.customerName;
   }
 }
