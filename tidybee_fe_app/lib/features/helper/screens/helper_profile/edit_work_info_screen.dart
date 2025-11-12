@@ -249,23 +249,23 @@ class _EditWorkInfoScreenState extends State<EditWorkInfoScreen> {
   void _toggle(List<int> l, int id) =>
       setState(() => l.contains(id) ? l.remove(id) : l.add(id));
 
-  Widget _textField(
-    TextEditingController c,
-    String l, {
-    String? suffix,
-    String? Function(String?)? validator,
-  }) => TextFormField(
-    controller: c,
-    keyboardType: TextInputType.number,
-    decoration: InputDecoration(
-      labelText: l,
-      suffixText: suffix,
-      filled: true,
-      fillColor: Colors.white,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-    ),
-    validator: validator,
-  );
+  // Widget _textField(
+  //   TextEditingController c,
+  //   String l, {
+  //   String? suffix,
+  //   String? Function(String?)? validator,
+  // }) => TextFormField(
+  //   controller: c,
+  //   keyboardType: TextInputType.number,
+  //   decoration: InputDecoration(
+  //     labelText: l,
+  //     suffixText: suffix,
+  //     filled: true,
+  //     fillColor: Colors.white,
+  //     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+  //   ),
+  //   validator: validator,
+  // );
 
   Widget _chips(Map<int, String> map, List<int> sel, Function(int) onTap) =>
       Wrap(

@@ -5,7 +5,6 @@ import 'package:tidybee_fe_app/core/common_widgets/notification_service.dart';
 import 'package:tidybee_fe_app/features/chat/model/chat_room.dart';
 import 'package:tidybee_fe_app/features/chat/services/chat_service.dart';
 import 'package:tidybee_fe_app/features/chat/widget/chat_room_item.dart';
-import 'package:tidybee_fe_app/features/chat/screen/chat_screen.dart';
 
 class ChatListScreen extends StatefulWidget {
   final String token;
@@ -82,8 +81,8 @@ class _ChatListScreenState extends State<ChatListScreen> {
                   final room = _rooms[index];
 
                   // === TỰ ĐỘNG LẤY TÊN HELPER ===
-                  final opponentName = room.helperName?.isNotEmpty == true
-                      ? room.helperName!
+                  final opponentName = room.helperName.isNotEmpty == true
+                      ? room.helperName
                       : "Helper";
 
                   return ChatRoomItem(
