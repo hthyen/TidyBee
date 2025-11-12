@@ -5,18 +5,14 @@ import 'package:tidybee_fe_app/core/common_widgets/error_messages.dart';
 import 'package:tidybee_fe_app/features/customer/model/booking.dart';
 
 class BookingServices {
-  final String requestBookingUrl = dotenv.env['API_REQUEST_BOOKING'] ?? '';
-  final String getBooking = dotenv.env['API_GET_BOOKING'] ?? '';
-  final String setHelperForBooking =
-      dotenv.env['API_ASSIGN_HELPER_FOR_BOOKING'] ?? '';
-  final String getBookingById = dotenv.env['API_GET_BOOKING_BY_ID'] ?? '';
+  final String baseUrl = dotenv.env['API_BOOKING'] ?? '';
 
   // Future - asynchronous createBooking
   Future<Booking?> createBooking(
     Map<String, dynamic> newBooking,
     String token,
   ) async {
-    final url = Uri.parse('$requestBookingUrl');
+    final url = Uri.parse('$baseUrl');
 
     final response = await http.post(
       url,
@@ -39,7 +35,7 @@ class BookingServices {
 
   // Future - asynchronous get user booking
   Future<List<Booking>> getUserBooking(String token) async {
-    final url = Uri.parse('$getBooking');
+    final url = Uri.parse('$baseUrl/my-bookings?page=1&pageSize=10');
 
     final response = await http.get(
       url,
@@ -73,7 +69,7 @@ class BookingServices {
 
   // Future - asynchronous get Booking By Id
   Future<Booking> getUserBookingById(String token, String bookingId) async {
-    final url = Uri.parse('$getBookingById/$bookingId');
+    final url = Uri.parse('$baseUrl/$bookingId');
 
     final response = await http.get(
       url,
@@ -104,7 +100,7 @@ class BookingServices {
     String? note,
   }) async {
     final response = await http.post(
-      Uri.parse('$setHelperForBooking/$bookingId/select-helpers'),
+      Uri.parse('$baseUrl/$bookingId/select-helpers'),
       headers: {
         "Authorization": "Bearer $token",
         "Content-Type": "application/json",

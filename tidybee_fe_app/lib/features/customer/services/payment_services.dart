@@ -5,9 +5,7 @@ import 'package:tidybee_fe_app/features/customer/model/payment.dart';
 import 'package:tidybee_fe_app/features/customer/model/qr.dart';
 
 class PaymentService {
-  final String apiCreatePayment = dotenv.env['API_CREATE_PAYMENT'] ?? '';
-  final String apiCreateQrCode = dotenv.env['API_CREATE_QR_CODE'] ?? '';
-  final String apiGetPaymentById = dotenv.env['API_GET_PAYMENT_BY_ID'] ?? '';
+  final String baseUrl = dotenv.env['API_PAYMENT'] ?? '';
 
   // Future - asynchronous createPayment
   Future<Payment?> createPayment({
@@ -17,7 +15,7 @@ class PaymentService {
     required int paymentMethod,
   }) async {
     try {
-      final url = Uri.parse('$apiCreatePayment');
+      final url = Uri.parse('$baseUrl');
 
       final body = jsonEncode({
         "bookingRequestId": bookingRequestId,
@@ -55,7 +53,7 @@ class PaymentService {
     required String transactionId,
   }) async {
     try {
-      final url = Uri.parse('$apiCreateQrCode/${transactionId}/sepay');
+      final url = Uri.parse('$baseUrl/${transactionId}/sepay');
 
       final body = jsonEncode({"transactionId": transactionId});
 
@@ -85,7 +83,7 @@ class PaymentService {
 
   // Future - asynchronous get payment by id
   Future<Payment?> getPaymentById(String token, String paymentId) async {
-    final url = Uri.parse('$apiGetPaymentById/$paymentId');
+    final url = Uri.parse('$baseUrl/$paymentId');
 
     try {
       final response = await http.get(

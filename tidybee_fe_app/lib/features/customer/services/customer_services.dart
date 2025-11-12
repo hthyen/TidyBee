@@ -4,11 +4,11 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:tidybee_fe_app/features/customer/model/customer.dart';
 
 class CustomerService {
-  final String getCustomerByIdUrl = dotenv.env['API_CUSTOMER_BY_ID'] ?? '';
+  final String baseUrl = dotenv.env['API_CUSTOMER'] ?? '';
 
   // Future - asynchronous get customer by id
   Future<Customer?> getCustomer(String token, String customerId) async {
-    final url = Uri.parse('$getCustomerByIdUrl/${customerId}');
+    final url = Uri.parse('$baseUrl/${customerId}');
 
     final response = await http.get(
       url,

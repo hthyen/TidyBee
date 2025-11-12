@@ -4,15 +4,12 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:tidybee_fe_app/features/helper/model/helper.dart';
 
 class HelperServices {
-  final String helperProfileUrl = dotenv.env['API_HELPER_BY_ID'] ?? '';
-
-  final String updateHelperProfileUrl =
-      dotenv.env['API_HELPER_PROFILE_UPDATE'] ?? '';
+  final String baseUrl = dotenv.env['API_HELPER'] ?? '';
 
   // Retrieve helper information by userId
   Future<Helper?> getHelper(String token, String userId) async {
     try {
-      final url = Uri.parse('$helperProfileUrl/$userId');
+      final url = Uri.parse('$baseUrl/$userId');
       final response = await http.get(
         url,
         headers: {
@@ -42,7 +39,7 @@ class HelperServices {
     required Map<String, dynamic> updateData,
   }) async {
     try {
-      final url = Uri.parse(updateHelperProfileUrl);
+      final url = Uri.parse(baseUrl);
 
       final response = await http.put(
         url,
