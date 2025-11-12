@@ -26,6 +26,8 @@ class _CustomerAsignHelperState extends State<CustomerAsignHelper> {
   final BookingServices _bookingService = BookingServices();
   late Future<List<Helper>> _futureHelper;
 
+  bool _isLoading = false;
+
   @override
   void initState() {
     super.initState();
@@ -40,6 +42,43 @@ class _CustomerAsignHelperState extends State<CustomerAsignHelper> {
     );
 
     print(_futureHelper);
+  }
+
+  // Set helper for booking
+  Future<void> _setHelper(Helper helper) async {
+    setState(() => _isLoading = true);
+
+    try {
+      final booking = await _bookingService.assignHelperToBooking(
+        bookingId: widget.booking.bookingId ?? "",
+        helperId: helper.helperId ?? "",
+        token: widget.token,
+      );
+
+      if (!mounted) return;
+
+      if (booking != null) {
+        Navigator.pop(context);
+        context.go(
+          "/customer-confirm-booking",
+          extra: {"token": widget.token, "booking": widget.booking},
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Lỗi chọn nhân viên"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Lỗi: $e"), backgroundColor: Colors.red),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -199,66 +238,70 @@ class _CustomerAsignHelperState extends State<CustomerAsignHelper> {
   void _showConfirmationDialog(Helper helper) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        // Title
-        title: const Text(
-          "Xác nhận lựa chọn",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-
-        // Content
-        content: Text(
-          "Bạn có chắc muốn chọn nhân viên ${helper.helperName} không?",
-          style: const TextStyle(fontSize: 16),
-        ),
-        actions: [
-          // Cancel btn
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
-              "Hủy",
-              style: TextStyle(color: Colors.grey, fontSize: 16),
-            ),
+      barrierDismissible: !_isLoading,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setStateDialog) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
-          // Confirm btn
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+          // Title
+          title: const Text(
+            "Xác nhận lựa chọn",
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+
+          // Content
+          content: Text(
+            "Bạn có chắc muốn chọn nhân viên ${helper.helperName} không?",
+            style: const TextStyle(fontSize: 16),
+          ),
+          actions: [
+            // Btn cancel
+            TextButton(
+              onPressed: _isLoading ? null : () => Navigator.pop(context),
+              child: const Text(
+                "Hủy",
+                style: TextStyle(color: Colors.grey, fontSize: 16),
               ),
             ),
-            onPressed: () async {
-              final booking = await _bookingService.assignHelperToBooking(
-                bookingId: widget.booking.bookingId ?? "",
-                helperId: helper.helperId ?? "",
-                token: widget.token,
-              );
 
-              if (booking != null) {
-                context.go(
-                  "/customer-confirm-booking",
-                  extra: {"token": widget.token, "booking": widget.booking},
-                );
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Lỗi chọn nhân viên"),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
-            },
-            child: const Text(
-              "Xác nhận",
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
+            // Btn confirm
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
+              onPressed: _isLoading
+                  ? null
+                  : () async {
+                      setStateDialog(() => _isLoading = true);
+                      await _setHelper(helper);
+
+                      if (context.mounted) {
+                        setStateDialog(() => _isLoading = false);
+                      }
+                    },
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text(
+                      "Xác nhận",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

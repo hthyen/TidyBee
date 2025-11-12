@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:tidybee_fe_app/features/auth/screens/login_screen.dart';
 import 'package:tidybee_fe_app/features/auth/screens/register_screen.dart';
 import 'package:tidybee_fe_app/features/customer/model/booking.dart';
+import 'package:tidybee_fe_app/features/customer/model/payment.dart';
 import 'package:tidybee_fe_app/features/customer/screens/customer_booking/customer_asign_helper.dart';
 import 'package:tidybee_fe_app/features/customer/screens/customer_booking/customer_booking_screen.dart';
 import 'package:tidybee_fe_app/features/customer/screens/customer_booking/customer_confirm_booking.dart';
@@ -16,6 +17,10 @@ import 'package:tidybee_fe_app/features/customer/screens/customer_profile/addres
 import 'package:tidybee_fe_app/features/customer/screens/customer_profile/payment_method_screen.dart';
 import 'package:tidybee_fe_app/features/customer/screens/customer_profile/wallet_screen.dart';
 import 'package:tidybee_fe_app/features/customer/screens/customer_profile/voucher_screen.dart';
+import 'package:tidybee_fe_app/features/customer/screens/notification/cash_notifi_page.dart';
+import 'package:tidybee_fe_app/features/customer/screens/notification/sepay_failed_page.dart';
+import 'package:tidybee_fe_app/features/customer/screens/notification/sepay_success_page.dart';
+import 'package:tidybee_fe_app/features/customer/screens/qr_code/payment_qr_page.dart';
 import 'package:tidybee_fe_app/features/helper/screens/helper_booking/helper_booking_screen.dart';
 import 'package:tidybee_fe_app/features/helper/screens/helper_bottom_navigate.dart';
 import 'package:tidybee_fe_app/features/helper/screens/helper_home/helper_home_screen.dart';
@@ -236,6 +241,53 @@ class AppRouter {
           final booking = extra['booking'] as Booking;
 
           return CustomerConfirmBooking(booking: booking, token: token);
+        },
+      ),
+
+      GoRoute(
+        path: "/payment-qr",
+        name: "payment-qr",
+        builder: (context, state) {
+          final extraData = state.extra as Map<String, dynamic>;
+          final token = extraData["token"] as String;
+          final payment = extraData["payment"] as Payment;
+
+          return PaymentQrPage(
+            qrCodeUrl: extraData["qrCodeUrl"] as String,
+            token: token,
+            payment: payment,
+          );
+        },
+      ),
+
+      GoRoute(
+        path: "/payment-success",
+        name: "payment-success",
+        builder: (context, state) {
+          final payment = state.extra as Payment;
+
+          return SepaySuccessPage(payment: payment);
+        },
+      ),
+
+      GoRoute(
+        path: "/payment-failed",
+        name: "payment-failed",
+        builder: (context, state) {
+          final payment = state.extra as Payment;
+
+          return SepayFailedPage(payment: payment);
+        },
+      ),
+
+      GoRoute(
+        path: "/cash-notifi",
+        name: "cash-notifi",
+        builder: (context, state) {
+          final extraData = state.extra as Map<String, dynamic>;
+          final payment = extraData["payment"] as Payment;
+
+          return CashNotifiPage(payment: payment);
         },
       ),
 

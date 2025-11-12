@@ -313,25 +313,27 @@ class _CustomerServicesDetailScreenState
           child: Row(
             children: [
               // Button order
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.yellow[700],
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 14,
+              Expanded(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.yellow[700],
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 14,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 2,
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 2,
-                ),
-                onPressed: _submitBooking,
+                  onPressed: _isLoading ? null : _submitBooking,
 
-                // Text
-                child: const Text(
-                  "Đặt dịch vụ",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  // Text
+                  child: const Text(
+                    "Đặt dịch vụ",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
                 ),
               ),
             ],

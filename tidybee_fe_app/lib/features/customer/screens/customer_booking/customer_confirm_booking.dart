@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:tidybee_fe_app/core/common_services/utils_method.dart';
 import 'package:tidybee_fe_app/core/theme/app_colors.dart';
 import 'package:tidybee_fe_app/features/customer/model/booking.dart';
 import 'package:tidybee_fe_app/features/customer/services/booking_services.dart';
+import 'package:tidybee_fe_app/features/customer/services/payment_services.dart';
 import 'package:tidybee_fe_app/features/customer/widgets/confirm_booking_widgets/payment_method_section.dart';
 
 class CustomerConfirmBooking extends StatefulWidget {
@@ -22,8 +24,13 @@ class CustomerConfirmBooking extends StatefulWidget {
 class _CustomerConfirmBookingState extends State<CustomerConfirmBooking> {
   final BookingServices _bookingService = BookingServices();
   late Future<Booking> _futureBooking;
+
   bool payWithVisa = true;
-  String paymentMethod = "SEPAY";
+
+  // 4 = SEPAY, 1 = CASH
+  int paymentMethod = 4;
+
+  final PaymentService _paymentService = PaymentService();
 
   @override
   void initState() {
@@ -40,7 +47,59 @@ class _CustomerConfirmBookingState extends State<CustomerConfirmBooking> {
   }
 
   // Method to payment
-  void _handleConfirmOrder() async {}
+  void _handleConfirmOrder() async {
+    // Create payment
+    final payment = await _paymentService.createPayment(
+      token: widget.token,
+      amount: widget.booking.estimatedPrice ?? 0,
+      bookingRequestId: widget.booking.bookingId ?? "",
+      paymentMethod: paymentMethod,
+    );
+
+    print(payment);
+
+    if (!mounted) return;
+
+    if (payment != null) {
+      // Create qr by payment Id
+      if (payment.paymentMethod == 4) {
+        final qrCode = await _paymentService.createQrCode(
+          token: widget.token,
+          transactionId: payment.id ?? "",
+        );
+
+        if (qrCode != null) {
+          context.go(
+            "/payment-qr",
+            extra: {
+              "qrCodeUrl": qrCode.qrCodeUrl,
+              "payment": payment,
+              "token": widget.token,
+            },
+          );
+
+          return;
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Lỗi tạo mã qr!"),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } else if (payment.paymentMethod == 1) {
+        context.go("/cash-notifi", extra: {"payment": payment});
+        return;
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Lỗi tạo giao dịch!"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   // Map status into text and color
   Map<String, dynamic> _getStatusDisplay(int status) {
@@ -237,7 +296,7 @@ class _CustomerConfirmBookingState extends State<CustomerConfirmBooking> {
         onChanged: (value) {
           setState(() {
             payWithVisa = value;
-            paymentMethod = value ? "SEPAY" : "CASH";
+            paymentMethod = value ? 4 : 1;
           });
         },
         onConfirm: _handleConfirmOrder,
