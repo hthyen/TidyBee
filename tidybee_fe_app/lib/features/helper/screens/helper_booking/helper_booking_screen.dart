@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:tidybee_fe_app/core/theme/app_colors.dart';
 import 'package:tidybee_fe_app/features/helper/model/booking_request.dart';
 import 'package:tidybee_fe_app/features/helper/services/booking_services.dart';
+import 'package:tidybee_fe_app/features/helper/widgets/helper_booking/booking_calendar.dart';
+import 'package:tidybee_fe_app/features/helper/widgets/helper_booking/job_card.dart';
+import 'package:tidybee_fe_app/features/helper/widgets/helper_booking/empty_state.dart';
+import 'package:tidybee_fe_app/features/chat/model/chat_room.dart';
+import 'package:tidybee_fe_app/features/chat/screen/chat_screen.dart';
+import 'package:tidybee_fe_app/features/chat/services/chat_service.dart';
+import 'package:tidybee_fe_app/core/theme/app_colors.dart';
 
 class HelperBookingScreen extends StatefulWidget {
   final String? token;
@@ -12,42 +17,69 @@ class HelperBookingScreen extends StatefulWidget {
   State<HelperBookingScreen> createState() => _HelperBookingScreenState();
 }
 
-class _HelperBookingScreenState extends State<HelperBookingScreen> {
+class _HelperBookingScreenState extends State<HelperBookingScreen>
+    with TickerProviderStateMixin {
   late final BookingService _bookingService;
+  late TabController _tabController;
+
   bool _isLoading = true;
-  List<BookingRequest> _bookings = [];
+  List<BookingRequest> _allBookings = [];
+  List<BookingRequest> _upcoming = [];
+  List<BookingRequest> _completed = [];
+
+  DateTime _selectedDay = DateTime.now();
+  DateTime _focusedDay = DateTime.now();
 
   @override
   void initState() {
     super.initState();
     _bookingService = BookingService();
-    _loadAcceptedBookings();
+    _tabController = TabController(length: 2, vsync: this);
+    _loadBookings();
   }
 
-  Future<void> _loadAcceptedBookings() async {
-    if (widget.token == null || !mounted) return;
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
+  Future<void> _loadBookings() async {
+    if (widget.token == null || !mounted) return;
     setState(() => _isLoading = true);
 
     try {
       final bookings = await _bookingService.getAvailableBookingsForHelper(
         token: widget.token!,
       );
-
       if (!mounted) return;
 
       setState(() {
-        _bookings = bookings;
+        _allBookings = bookings;
+        _classifyBookings();
         _isLoading = false;
       });
     } catch (e) {
-      if (!mounted) return;
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Lỗi kết nối: $e')));
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
+      }
     }
   }
+
+  void _classifyBookings() {
+    _upcoming = _allBookings.where((b) => b.status != 5).toList();
+    _completed = _allBookings.where((b) => b.status == 5).toList();
+    _upcoming.sort(
+      (a, b) => (a.scheduledStartTime ?? farFuture).compareTo(
+        b.scheduledStartTime ?? farFuture,
+      ),
+    );
+  }
+
+  static final farFuture = DateTime.now().add(const Duration(days: 365));
 
   @override
   Widget build(BuildContext context) {
@@ -55,188 +87,305 @@ class _HelperBookingScreenState extends State<HelperBookingScreen> {
       backgroundColor: const Color(0xfff6f6f6),
       appBar: AppBar(
         backgroundColor: AppColors.primary,
-        title: const Text("Công việc đã nhận"),
+        title: const Text("Lịch Công Việc"),
         centerTitle: true,
         elevation: 0,
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _loadAcceptedBookings,
-              child: _bookings.isEmpty ? _buildEmptyState() : _buildJobList(),
-            ),
-    );
-  }
-
-  Widget _buildJobList() {
-    // Sắp xếp theo ngày gần nhất
-    final sorted = _bookings
-      ..sort((a, b) {
-        final dateA =
-            a.scheduledDate ?? DateTime.now().add(const Duration(days: 365));
-        final dateB =
-            b.scheduledDate ?? DateTime.now().add(const Duration(days: 365));
-        return dateA.compareTo(dateB);
-      });
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: sorted.length,
-      itemBuilder: (context, index) {
-        final job = sorted[index];
-        return _buildJobCard(job);
-      },
-    );
-  }
-
-  Widget _buildJobCard(BookingRequest job) {
-    final time = job.scheduledDate != null
-        ? "${job.scheduledDate!.hour.toString().padLeft(2, '0')}:${job.scheduledDate!.minute.toString().padLeft(2, '0')} - ${_endTime(job)}"
-        : "Chưa xác định";
-    final hours = job.estimatedDuration ?? 0;
-    final createdAgo = job.createdAt != null
-        ? _timeAgo(job.createdAt!)
-        : "Vừa nhận";
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.shade300,
-            blurRadius: 6,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Title
-          Row(
-            children: [
-              const Icon(Icons.cleaning_services, color: Colors.blueAccent),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  job.title ?? "Dịch vụ",
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-              Text(
-                job.locationAddress ?? "Quận ?",
-                style: const TextStyle(
-                  color: Colors.deepPurple,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 12),
-
-          // Day + time
-          Row(
-            children: [
-              const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
-              const SizedBox(width: 4),
-              Text(_formatDate(job.scheduledDate)),
-              const SizedBox(width: 16),
-              const Icon(Icons.access_time, size: 16, color: Colors.grey),
-              const SizedBox(width: 4),
-              Text("$time • $hours giờ"),
-            ],
-          ),
-
-          const SizedBox(height: 12),
-
-          // Booking time
-          Row(
-            children: [
-              Icon(Icons.schedule, size: 16, color: Colors.grey[600]),
-              const SizedBox(width: 4),
-              Text(
-                createdAgo,
-                style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 12),
-
-          // Price
-          Align(
-            alignment: Alignment.bottomRight,
-            child: Text(
-              "${NumberFormat('#,##0').format(job.budget ?? 0)}đ",
-              style: const TextStyle(
-                color: Colors.orangeAccent,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _endTime(BookingRequest job) {
-    if (job.scheduledDate == null || job.estimatedDuration == null)
-      return "??:??";
-    final end = job.scheduledDate!.add(Duration(hours: job.estimatedDuration!));
-    return "${end.hour.toString().padLeft(2, '0')}:${end.minute.toString().padLeft(2, '0')}";
-  }
-
-  String _formatDate(DateTime? date) {
-    if (date == null) return "Chưa xác định";
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final tomorrow = today.add(const Duration(days: 1));
-    final jobDay = DateTime(date.year, date.month, date.day);
-
-    if (jobDay == today) return "Hôm nay";
-    if (jobDay == tomorrow) return "Ngày mai";
-    return DateFormat('dd/MM/yyyy').format(date);
-  }
-
-  String _timeAgo(DateTime date) {
-    final diff = DateTime.now().difference(date);
-    if (diff.inMinutes < 1) return "Vừa nhận";
-    if (diff.inMinutes < 60) return "${diff.inMinutes} phút trước";
-    if (diff.inHours < 24) return "${diff.inHours} giờ trước";
-    return "${diff.inDays} ngày trước";
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.event_busy, size: 64, color: Colors.grey[400]),
-            const SizedBox(height: 16),
-            const Text(
-              "Bạn chưa có công việc nào",
-              style: TextStyle(fontSize: 16, color: Colors.grey),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              "Khi khách hàng chọn bạn, công việc sẽ xuất hiện ở đây",
-              style: TextStyle(fontSize: 14, color: Colors.grey),
-              textAlign: TextAlign.center,
-            ),
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(text: "Sắp tới"),
+            Tab(text: "Hoàn thành"),
           ],
         ),
       ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : TabBarView(
+              controller: _tabController,
+              children: [_buildUpcomingTab(), _buildCompletedTab()],
+            ),
     );
+  }
+
+  Widget _buildUpcomingTab() {
+    return RefreshIndicator(
+      onRefresh: _loadBookings,
+      child: Column(
+        children: [
+          BookingCalendar(
+            upcoming: _upcoming,
+            selectedDay: _selectedDay,
+            focusedDay: _focusedDay,
+            onDaySelected: (selected, focused) => setState(() {
+              _selectedDay = selected;
+              _focusedDay = focused;
+            }),
+          ),
+          Expanded(child: _buildJobList(_upcoming)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompletedTab() {
+    return RefreshIndicator(
+      onRefresh: _loadBookings,
+      child: _completed.isEmpty
+          ? EmptyState(message: "Chưa có công việc hoàn thành")
+          : _buildJobList(_completed),
+    );
+  }
+
+  Widget _buildJobList(List<BookingRequest> jobs) {
+    final filtered = jobs.where((job) {
+      if (job.scheduledDate == null) return true;
+      final jobDay = DateTime(
+        job.scheduledDate!.year,
+        job.scheduledDate!.month,
+        job.scheduledDate!.day,
+      );
+      final selected = DateTime(
+        _selectedDay.year,
+        _selectedDay.month,
+        _selectedDay.day,
+      );
+      return jobDay == selected;
+    }).toList();
+
+    if (filtered.isEmpty && _tabController.index == 0) {
+      return EmptyState(message: "Không có việc vào ngày này");
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      itemCount: filtered.length,
+      itemBuilder: (context, index) => JobCard(
+        job: filtered[index],
+        token: widget.token!,
+        onStart: _startJob,
+        onComplete: _completeJob,
+        onChat: _openChat,
+      ),
+    );
+  }
+
+  // === HÀNH ĐỘNG ===
+  Future<void> _startJob(BookingRequest job) async {
+    if (job.id == null || job.scheduledStartTime == null) return;
+
+    final now = DateTime.now();
+    final startTime = job.scheduledStartTime!;
+    final earliestStart = startTime.subtract(const Duration(minutes: 15));
+
+    // Kiểm tra: chưa tới giờ - 15 phút
+    if (now.isBefore(earliestStart)) {
+      final minutesLeft = earliestStart.difference(now).inMinutes;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Chưa tới giờ! Vui lòng đợi $minutesLeft phút nữa."),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    // Xác nhận
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Bắt đầu công việc"),
+        content: Text("Xác nhận bắt đầu:\n${job.title}"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text("Hủy"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text("Bắt đầu"),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() => _isLoading = true);
+
+    final success = await _bookingService.performBookingAction(
+      token: widget.token!,
+      bookingId: job.id!,
+      action: 4, // Bắt đầu
+    );
+
+    setState(() => _isLoading = false);
+
+    if (success) {
+      await _loadBookings();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Đã bắt đầu công việc!"),
+          backgroundColor: Colors.blue,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Lỗi khi bắt đầu"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _completeJob(BookingRequest job) async {
+    if (job.id == null || job.scheduledEndTime == null) return;
+
+    final now = DateTime.now();
+    final endTime = job.scheduledEndTime!;
+    final earliestComplete = endTime.subtract(const Duration(minutes: 15));
+
+    // Kiểm tra: chưa tới giờ - 15 phút
+    if (now.isBefore(earliestComplete)) {
+      final minutesLeft = earliestComplete.difference(now).inMinutes;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Chưa tới giờ hoàn thành! Vui lòng đợi $minutesLeft phút.",
+          ),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    if (job.status != 4) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Vui lòng bắt đầu công việc trước!"),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Xác nhận
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Hoàn thành công việc"),
+        content: Text("Xác nhận hoàn thành:\n${job.title}"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text("Hủy"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text("Hoàn thành"),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() => _isLoading = true);
+
+    final success = await _bookingService.performBookingAction(
+      token: widget.token!,
+      bookingId: job.id!,
+      action: 5,
+    );
+
+    setState(() => _isLoading = false);
+
+    if (success) {
+      await _loadBookings();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Công việc đã hoàn thành!"),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Lỗi khi hoàn thành"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _openChat(BookingRequest job) async {
+    if (job.id == null || job.customerId == null || job.helperId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Thiếu thông tin"),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final chatService = ChatService(widget.token!, job.helperId!);
+      ChatRoom? room = await chatService.createChatRoom(
+        bookingId: job.id!,
+        customerId: job.customerId!,
+        helperId: job.helperId!,
+      );
+
+      // Nếu đã có phòng → lấy tin nhắn để kiểm tra
+      if (room != null) {
+        final messages = await chatService.getMessages(
+          roomId: room.id,
+          page: 1,
+          pageSize: 1,
+        );
+        final hasMessages = messages.isNotEmpty;
+
+        // CHỈ GỬI CHÀO NẾU CHƯA CÓ TIN NHẮN
+        if (!hasMessages) {
+          await chatService.sendMessage(
+            roomId: room.id,
+            content: "Xin chào! Tôi là helper, đã nhận công việc của bạn.",
+          );
+        }
+      }
+
+      setState(() => _isLoading = false);
+
+      if (room == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Không thể tạo phòng"),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      if (!mounted) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ChatScreen(
+            token: widget.token!,
+            roomId: room.id,
+            opponentName: "Khách hàng",
+            currentUserId: job.helperId!,
+          ),
+        ),
+      );
+    } catch (e) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Lỗi: $e"), backgroundColor: Colors.red),
+      );
+    }
   }
 }

@@ -34,7 +34,7 @@ class _HelperProfileScreenState extends State<HelperProfileScreen> {
     final hasExperience = helper.experience?.trim().isNotEmpty == true;
     final hasLanguages = helper.languages?.trim().isNotEmpty == true;
 
-    // 2. Location: DỮ LIỆU TỪ API LÀ `location`
+    // 2. Location
     final address = helper.location?['address']?.toString().trim();
     final hasLocation = address?.isNotEmpty == true;
 
@@ -206,11 +206,11 @@ class _HelperProfileScreenState extends State<HelperProfileScreen> {
                         });
                   },
                   children: [
-                    HelperProfileInfoRow(
-                      title: 'Giá theo giờ',
-                      value:
-                          '${NumberFormat('#,##0').format(helper.hourlyRate ?? 0)} đ',
-                    ),
+                    // HelperProfileInfoRow(
+                    //   title: 'Giá theo giờ',
+                    //   value:
+                    //       '${NumberFormat('#,##0').format(helper.hourlyRate ?? 0)} đ',
+                    // ),
                     HelperProfileInfoRow(
                       title: 'Dịch vụ',
                       value: helper.services?.join(', ') ?? '—',

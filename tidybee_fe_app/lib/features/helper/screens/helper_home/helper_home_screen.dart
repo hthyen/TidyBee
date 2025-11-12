@@ -60,7 +60,6 @@ class _HelperHomeScreenState extends State<HelperHomeScreen> {
         });
       }
     } catch (e) {
-      print('Lỗi load: $e');
       if (mounted && !_isDisposed) {
         setState(() => _isLoading = false);
       }

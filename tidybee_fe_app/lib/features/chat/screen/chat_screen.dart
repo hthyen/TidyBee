@@ -50,14 +50,25 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _loadMessages() async {
     try {
       final messages = await _chatService.getMessages(
-        widget.roomId,
+        roomId: widget.roomId,
         page: 1,
         pageSize: 50,
         includeSystemMessages: true,
       );
 
       setState(() {
-        _messages = messages;
+        _messages = messages
+          ..sort((a, b) {
+            final dateA = a.sentAt;
+            final dateB = b.sentAt;
+
+            // Xử lý null: tin nhắn không có thời gian → đẩy xuống dưới
+            if (dateA == null && dateB == null) return 0;
+            if (dateA == null) return 1;
+            if (dateB == null) return -1;
+
+            return dateA.compareTo(dateB); // AN TOÀN
+          });
         _isLoading = false;
       });
       _scrollToBottom();
@@ -99,16 +110,25 @@ class _ChatScreenState extends State<ChatScreen> {
     _scrollToBottom();
 
     try {
-      final sentMessage = await _chatService.sendMessage(widget.roomId, text);
+      final sentMessage = await _chatService.sendMessage(
+        roomId: widget.roomId,
+        content: text,
+      );
+
+      // KIỂM TRA NULL TRƯỚC KHI DÙNG
+      if (sentMessage == null) {
+        throw Exception("Tin nhắn trả về null");
+      }
+
       setState(() {
         _messages.removeWhere((m) => m.id == tempId);
-        _messages.add(sentMessage);
+        _messages.add(sentMessage); // BÂY GIỜ AN TOÀN
         _isSending = false;
       });
       _scrollToBottom();
     } catch (e) {
       setState(() => _isSending = false);
-      _showError('Gửi tin nhắn thất bại');
+      _showError('Gửi tin nhắn thất bại: $e');
     }
   }
 
@@ -208,8 +228,8 @@ class _ChatScreenState extends State<ChatScreen> {
                           if (showDate) _buildDateHeader(message.sentAt),
                           ChatBubble(
                             message: message,
-                            currentUserId:
-                                widget.currentUserId, // TRUYỀN VÀO ĐỂ TÍNH isMe
+                            currentUserId: widget.currentUserId,
+                            opponentName: widget.opponentName,
                           ),
                         ],
                       );
@@ -257,12 +277,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _buildInputBar() {
     return Container(
-      padding: EdgeInsets.only(
-        left: 16,
-        right: 16,
-        top: 12,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 12,
-      ),
+      padding: EdgeInsets.only(left: 16, right: 16, top: 12, bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [

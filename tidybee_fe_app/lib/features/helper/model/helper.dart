@@ -48,7 +48,7 @@ class Helper {
       id: data['id']?.toString(),
       userId: data['userId']?.toString(),
       description: data['description']?.toString().trim(),
-      hourlyRate: _parseInt(data['hourlyRate']),
+      hourlyRate: _parseInt(data['hourlyRate'] ?? data['hourly_rate']),
       isAvailable: data['isAvailable'] as bool? ?? false,
       rating: data['rating'] != null
           ? double.tryParse(data['rating'].toString())

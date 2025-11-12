@@ -326,19 +326,6 @@ class AppRouter {
               return HelperHomeScreen(token: token);
             },
           ),
-
-          GoRoute(
-            path: "/helper-chat",
-            name: "helper-chat",
-            builder: (context, state) {
-              final bottom = context
-                  .findAncestorWidgetOfExactType<HelperBottomNavigate>();
-              return ChatListScreen(
-                token: bottom?.token ?? '',
-                currentUserId: bottom?.currentUserId ?? '',
-              );
-            },
-          ),
           GoRoute(
             path: "/helper-booking",
             name: "helper-booking",
@@ -396,6 +383,11 @@ class AppRouter {
         name: "chat-detail",
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>;
+
+          // DEBUG: In ra để kiểm tra
+          print('AppRouter - currentUserId: ${extra['currentUserId']}');
+          print('AppRouter - roomId: ${extra['roomId']}');
+
           return ChatScreen(
             token: extra['token'] as String,
             roomId: extra['roomId'] as String,

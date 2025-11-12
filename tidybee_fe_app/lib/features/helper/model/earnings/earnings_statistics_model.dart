@@ -77,7 +77,6 @@ class EarningsData {
     };
   }
 
-  // Helper method parse int an toàn
   static int? _parseInt(dynamic value) {
     if (value == null) return null;
     if (value is int) return value;

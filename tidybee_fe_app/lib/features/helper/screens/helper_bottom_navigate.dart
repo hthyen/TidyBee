@@ -25,7 +25,6 @@ class _HelperBottomNavigateState extends State<HelperBottomNavigate> {
   // Define routes corresponding to each bottom nav item
   final List<String> _routes = [
     '/helper-homepage',
-    '/helper-chat',
     '/helper-booking',
     '/helper-profile',
   ];
@@ -61,13 +60,6 @@ class _HelperBottomNavigateState extends State<HelperBottomNavigate> {
             icon: Icon(Icons.home_outlined),
             activeIcon: Icon(Icons.home),
             label: 'Trang chủ',
-          ),
-
-          // Chat
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat_bubble_outline),
-            activeIcon: Icon(Icons.chat_bubble),
-            label: 'Tin nhắn',
           ),
 
           // Booking

@@ -50,18 +50,20 @@ class _LoginFormState extends State<LoginForm> {
         if (!mounted) return;
 
         if (user != null) {
-          // Login successful
           NotificationService.showSuccess(
             context,
-            "Chào mừng bạn đã đến với PickMe!",
+            "Chào mừng bạn đã đến với TidyBee!",
           );
 
-          if (user.role == 1) {
-            context.go("/customer-homepage", extra: user.accessToken);
-          }
+          final Map<String, String> loginData = {
+            'token': user.accessToken ?? '',
+            'currentUserId': user.id ?? '',
+          };
 
-          if (user.role == 2) {
-            context.go("/helper-homepage", extra: user.accessToken);
+          if (user.role == 1) {
+            context.go("/customer-homepage", extra: loginData);
+          } else if (user.role == 2) {
+            context.go("/helper-homepage", extra: loginData);
           }
 
           Future.delayed(const Duration(milliseconds: 300), () {
