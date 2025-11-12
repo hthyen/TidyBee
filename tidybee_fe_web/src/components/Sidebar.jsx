@@ -36,12 +36,6 @@ export default function Sidebar() {
           Booking
         </Link>
         <Link
-          to="/admin/orders"
-          className="text-gray-700 hover:text-green-500 text-lg"
-        >
-          Orders
-        </Link>
-        <Link
           to="/admin/payments"
           className="text-gray-700 hover:text-green-500 text-lg"
         >

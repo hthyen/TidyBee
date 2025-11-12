@@ -5,15 +5,14 @@ import { API } from "../services/api";
 
 export default function Users() {
   const [users, setUsers] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [formData, setFormData] = useState({});
-  const [editMode, setEditMode] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
-
+  const [editMode, setEditMode] = useState(false);
+  const [formData, setFormData] = useState({});
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const roleMap = {
     1: "Customer",
@@ -21,28 +20,26 @@ export default function Users() {
     3: "Admin",
   };
 
-  // Lấy danh sách người dùng
-  const fetchUsers = async (page = 1) => {
+  const fetchUsers = async (pageNum = 1) => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(
-        `${API.USER}/Users?page=${page}&pageSize=10`,
+      const res = await axios.get(
+        `${API.USER}/Users?page=${pageNum}&pageSize=10`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      const usersData = response.data?.data?.users || [];
-      const total = response.data?.data?.totalPages || 1;
+      const usersData = res.data?.data?.users || [];
+      const total = res.data?.data?.totalPages || 1;
 
       setUsers(Array.isArray(usersData) ? usersData : []);
       setTotalPages(total);
+      setPage(pageNum);
     } catch (err) {
-      toast.error(
-        err.response?.data?.message ||
-          "Không thể tải danh sách người dùng! Vui lòng thử lại."
-      );
+      console.error(err);
+      toast.error("Không thể tải danh sách người dùng!");
     } finally {
       setLoading(false);
     }
@@ -52,46 +49,40 @@ export default function Users() {
     fetchUsers(page);
   }, [page]);
 
-  // Xem chi tiết user
   const handleUserClick = async (id) => {
     setDetailLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(`${API.USER}/Users/${id}`, {
+      const res = await axios.get(`${API.USER}/Users/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const data = response.data?.data;
-      setSelectedUser(data);
-      setFormData(data);
+      setSelectedUser(res.data?.data);
+      setFormData(res.data?.data);
       setEditMode(false);
     } catch (err) {
-      console.error("❌ Lỗi tải user chi tiết:", err);
-      toast.error("Không thể tải thông tin chi tiết!");
+      console.error(err);
+      toast.error("Không thể tải chi tiết user!");
     } finally {
       setDetailLoading(false);
     }
   };
 
-  // Xoá user
   const handleDeleteUser = async (id) => {
     if (!window.confirm("Bạn có chắc muốn xoá người dùng này?")) return;
-
     try {
       const token = localStorage.getItem("token");
       await axios.delete(`${API.USER}/Users/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       toast.success("🗑️ Xoá người dùng thành công!");
       fetchUsers(page);
       setSelectedUser(null);
-    } catch (error) {
-      console.error("❌ Lỗi khi xoá user:", error);
-      toast.error(error.response?.data?.message || "Không thể xoá người dùng!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Không thể xoá người dùng!");
     }
   };
 
-  // Cập nhật user
   const handleUpdateUser = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -101,189 +92,168 @@ export default function Users() {
         lastName: formData.lastName || "",
         phoneNumber: formData.phoneNumber || "",
         gender: formData.gender || "other",
-        avatar: formData.avatar || "",
         role: Number(formData.role) || 1,
         status: Number(formData.status) || 1,
       };
-
       await axios.put(`${API.USER}/Users/${selectedUser.id}`, payload, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
-
       toast.success("✅ Cập nhật người dùng thành công!");
       setEditMode(false);
       handleUserClick(selectedUser.id);
     } catch (err) {
-      console.error("❌ Cập nhật thất bại:", err.response?.data || err.message);
-
-      if (err.response?.data?.errors) {
-        console.group("📋 Validation Errors:");
-        Object.entries(err.response.data.errors).forEach(
-          ([field, messages]) => {
-            console.log(`- ${field}: ${messages.join(", ")}`);
-          }
-        );
-        console.groupEnd();
-      }
-
-      toast.error(
-        `❌ Cập nhật thất bại: ${
-          err.response?.data?.title || "Kiểm tra console để biết chi tiết."
-        }`
-      );
+      console.error(err);
+      toast.error("❌ Cập nhật thất bại!");
     }
   };
 
-  // Lọc người dùng
   const filteredUsers = users.filter((u) => {
     const displayName =
-      u.fullName ||
-      u.name ||
-      (u.firstName && u.lastName ? `${u.firstName} ${u.lastName}` : "");
+      u.fullName || u.name || `${u.firstName || ""} ${u.lastName || ""}`;
     return (
-      displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.email?.toLowerCase().includes(searchTerm.toLowerCase())
+      displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (u.email || "").toLowerCase().includes(searchTerm.toLowerCase())
     );
   });
 
-  if (loading)
-    return <p className="italic text-gray-500">Đang tải người dùng...</p>;
-
   return (
-    <div className="flex gap-6">
-      {/* Danh sách user */}
-      <div className="flex-1">
-        <h1 className="text-2xl font-bold mb-6 text-gray-800">
-          Quản lý người dùng
-        </h1>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-6 text-gray-800">
+        👥 Quản lý người dùng
+      </h1>
 
-        <div className="mb-6 flex gap-3 items-center">
-          <input
-            type="text"
-            placeholder="Tìm kiếm người dùng..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-1/3 px-4 py-2 border rounded-lg shadow-sm focus:ring focus:ring-green-200 focus:border-green-400"
-          />
-        </div>
-
-        <div className="overflow-x-auto bg-white rounded-lg shadow">
-          <table className="min-w-full border-collapse">
-            <thead className="bg-green-100 text-gray-700">
-              <tr>
-                <th className="p-3 text-left">ID</th>
-                <th className="p-3 text-left">Họ và tên</th>
-                <th className="p-3 text-left">Email</th>
-                <th className="p-3 text-left">Vai trò</th>
-                <th className="p-3 text-left">Trạng thái</th>
-                <th className="p-3 text-center">Hành động</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredUsers.length > 0 ? (
-                filteredUsers.map((user) => {
-                  const displayName =
-                    user.fullName ||
-                    user.name ||
-                    (user.firstName && user.lastName
-                      ? `${user.firstName} ${user.lastName}`
-                      : "—");
-                  return (
-                    <tr
-                      key={user.id}
-                      className="border-t hover:bg-gray-50 transition"
-                    >
-                      <td
-                        className="p-3 text-blue-600 cursor-pointer hover:underline"
-                        onClick={() => handleUserClick(user.id)}
-                      >
-                        {user.id}
-                      </td>
-                      <td className="p-3">{displayName}</td>
-                      <td className="p-3">{user.email || "—"}</td>
-                      <td className="p-3">{roleMap[user.role] || "—"}</td>
-                      <td className="p-3">{user.status || "—"}</td>
-                      <td className="p-3 text-center">
-                        <button
-                          onClick={() => handleDeleteUser(user.id)}
-                          className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-                        >
-                          Xoá
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })
-              ) : (
-                <tr>
-                  <td
-                    colSpan="6"
-                    className="text-center p-4 text-gray-500 italic"
-                  >
-                    Không có người dùng nào.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Phân trang */}
-        <div className="flex justify-center mt-6 gap-3">
-          <button
-            disabled={page === 1}
-            onClick={() => setPage(page - 1)}
-            className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
-          >
-            Trước
-          </button>
-          <span className="font-medium text-gray-700">
-            Trang {page} / {totalPages}
-          </span>
-          <button
-            disabled={page >= totalPages}
-            onClick={() => setPage(page + 1)}
-            className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
-          >
-            Sau
-          </button>
-        </div>
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="Tìm kiếm người dùng..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-1/3 px-3 py-2 border rounded shadow-sm focus:ring focus:ring-green-200 focus:border-green-400"
+        />
       </div>
 
-      {/* Panel chi tiết */}
-      <div className="w-96 bg-white rounded-lg shadow p-6">
-        {detailLoading ? (
-          <p>Đang tải chi tiết người dùng...</p>
-        ) : selectedUser ? (
-          <div>
-            <h2 className="text-xl font-bold mb-4">Thông tin người dùng</h2>
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-20 text-gray-500">
+          <p className="italic text-lg">⏳ Đang tải người dùng...</p>
+        </div>
+      ) : (
+        <>
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <table className="min-w-full border-collapse">
+              <thead className="bg-green-100 text-gray-700">
+                <tr>
+                  <th className="p-3 text-left">ID</th>
+                  <th className="p-3 text-left">Họ & Tên</th>
+                  <th className="p-3 text-left">Email</th>
+                  <th className="p-3 text-left">Vai trò</th>
+                  <th className="p-3 text-left">Trạng thái</th>
+                  <th className="p-3 text-center">Hành động</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredUsers.length > 0 ? (
+                  filteredUsers.map((user, idx) => {
+                    const displayName =
+                      user.fullName ||
+                      user.name ||
+                      `${user.firstName || ""} ${user.lastName || ""}`;
+                    return (
+                      <tr
+                        key={user.id}
+                        className="border-t hover:bg-gray-50 cursor-pointer"
+                        onClick={() => handleUserClick(user.id)}
+                      >
+                        <td className="p-3">{user.id}</td>
+                        <td className="p-3">{displayName || "—"}</td>
+                        <td className="p-3">{user.email || "—"}</td>
+                        <td className="p-3">{roleMap[user.role] || "—"}</td>
+                        <td className="p-3">{user.status || "—"}</td>
+                        <td className="p-3 text-center">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteUser(user.id);
+                            }}
+                            className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                          >
+                            Xoá
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td
+                      colSpan="6"
+                      className="text-center p-4 italic text-gray-500"
+                    >
+                      Không có người dùng nào.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
 
-            {!editMode ? (
-              <div className="space-y-2">
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex justify-center gap-3 mt-4">
+              <button
+                disabled={page <= 1}
+                onClick={() => fetchUsers(page - 1)}
+                className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+              >
+                ← Trước
+              </button>
+              <span className="text-gray-700">
+                Trang {page}/{totalPages}
+              </span>
+              <button
+                disabled={page >= totalPages}
+                onClick={() => fetchUsers(page + 1)}
+                className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+              >
+                Sau →
+              </button>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Modal chi tiết */}
+      {selectedUser && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-lg w-[500px] max-h-[90vh] overflow-y-auto p-6 relative">
+            {detailLoading ? (
+              <p>⏳ Đang tải chi tiết...</p>
+            ) : !editMode ? (
+              <>
+                <h2 className="text-xl font-bold mb-4">Chi tiết người dùng</h2>
                 <p>
-                  <strong>Họ và tên:</strong> {selectedUser.firstName}{" "}
+                  <b>Họ & Tên:</b> {selectedUser.firstName}{" "}
                   {selectedUser.lastName}
                 </p>
                 <p>
-                  <strong>Email:</strong> {selectedUser.email}
+                  <b>Email:</b> {selectedUser.email}
                 </p>
                 <p>
-                  <strong>SĐT:</strong> {selectedUser.phoneNumber || "—"}
+                  <b>SĐT:</b> {selectedUser.phoneNumber || "—"}
                 </p>
                 <p>
-                  <strong>Giới tính:</strong> {selectedUser.gender || "—"}
+                  <b>Giới tính:</b> {selectedUser.gender || "—"}
                 </p>
                 <p>
-                  <strong>Vai trò:</strong> {roleMap[selectedUser.role] || "—"}
+                  <b>Vai trò:</b> {roleMap[selectedUser.role] || "—"}
                 </p>
                 <p>
-                  <strong>Trạng thái:</strong> {selectedUser.status}
+                  <b>Trạng thái:</b> {selectedUser.status}
                 </p>
 
-                <div className="mt-4 flex gap-3">
+                <div className="flex justify-end gap-3 mt-4">
                   <button
                     onClick={() => setEditMode(true)}
                     className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
@@ -291,17 +261,18 @@ export default function Users() {
                     Chỉnh sửa
                   </button>
                   <button
-                    onClick={() => handleDeleteUser(selectedUser.id)}
-                    className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                    onClick={() => setSelectedUser(null)}
+                    className="px-4 py-2 border rounded hover:bg-gray-100"
                   >
-                    Xoá
+                    Đóng
                   </button>
                 </div>
-              </div>
+              </>
             ) : (
-              <div className="space-y-3">
-                <label className="block">
-                  <span className="text-gray-700">Họ</span>
+              <>
+                <h2 className="text-xl font-bold mb-4">Chỉnh sửa người dùng</h2>
+                <label className="block mb-2">
+                  <span>Họ</span>
                   <input
                     type="text"
                     value={formData.firstName || ""}
@@ -311,8 +282,8 @@ export default function Users() {
                     className="w-full border rounded px-3 py-2 mt-1"
                   />
                 </label>
-                <label className="block">
-                  <span className="text-gray-700">Tên</span>
+                <label className="block mb-2">
+                  <span>Tên</span>
                   <input
                     type="text"
                     value={formData.lastName || ""}
@@ -322,9 +293,8 @@ export default function Users() {
                     className="w-full border rounded px-3 py-2 mt-1"
                   />
                 </label>
-
-                <label className="block">
-                  <span className="text-gray-700">SĐT</span>
+                <label className="block mb-2">
+                  <span>SĐT</span>
                   <input
                     type="text"
                     value={formData.phoneNumber || ""}
@@ -334,9 +304,8 @@ export default function Users() {
                     className="w-full border rounded px-3 py-2 mt-1"
                   />
                 </label>
-
-                <label className="block">
-                  <span className="text-gray-700">Giới tính</span>
+                <label className="block mb-2">
+                  <span>Giới tính</span>
                   <select
                     value={formData.gender || "other"}
                     onChange={(e) =>
@@ -349,8 +318,7 @@ export default function Users() {
                     <option value="other">Khác</option>
                   </select>
                 </label>
-
-                <div className="flex gap-3 mt-4">
+                <div className="flex justify-end gap-3 mt-4">
                   <button
                     onClick={handleUpdateUser}
                     className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
@@ -359,20 +327,16 @@ export default function Users() {
                   </button>
                   <button
                     onClick={() => setEditMode(false)}
-                    className="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500"
+                    className="px-4 py-2 border rounded hover:bg-gray-100"
                   >
                     Huỷ
                   </button>
                 </div>
-              </div>
+              </>
             )}
           </div>
-        ) : (
-          <p className="italic text-gray-500">
-            Chọn một người dùng để xem chi tiết
-          </p>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

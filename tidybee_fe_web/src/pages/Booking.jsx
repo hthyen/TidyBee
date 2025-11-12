@@ -189,13 +189,13 @@ export default function Booking() {
           )}
         </>
       )}
-
       {/* Modal chi tiết */}
       {selectedBooking && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-xl shadow-lg w-[500px] relative">
+          <div className="bg-white p-6 rounded-xl shadow-lg w-[500px] max-h-[90vh] overflow-y-auto relative">
             <h2 className="text-xl font-bold mb-4">Chi tiết Booking</h2>
 
+            {/* Thông tin cơ bản */}
             <p>
               <b>ID:</b> {selectedBooking.id}
             </p>
@@ -203,19 +203,88 @@ export default function Booking() {
               <b>Dịch vụ:</b> {selectedBooking.title}
             </p>
             <p>
+              <b>Mô tả:</b> {selectedBooking.description || "Không có"}
+            </p>
+            <p>
               <b>Địa chỉ:</b>{" "}
               {selectedBooking.serviceLocation?.address || "Không có"}
+            </p>
+            <p>
+              <b>Loại dịch vụ:</b> {selectedBooking.serviceType}
             </p>
             <p>
               <b>Giá dự kiến:</b>{" "}
               {selectedBooking.estimatedPrice?.toLocaleString()} đ
             </p>
+            {selectedBooking.status === 3 && (
+              <p>
+                <b>Giá thực tế:</b>{" "}
+                {selectedBooking.finalPrice?.toLocaleString() || 0} đ
+              </p>
+            )}
             <p>
               <b>Ghi chú KH:</b> {selectedBooking.customerNotes || "Không có"}
             </p>
             <p>
               <b>Trạng thái:</b> {renderStatus(selectedBooking.status)}
             </p>
+
+            {/* Thời gian */}
+            <p>
+              <b>Thời gian dự kiến:</b>{" "}
+              {new Date(selectedBooking.scheduledStartTime).toLocaleString()} -{" "}
+              {new Date(selectedBooking.scheduledEndTime).toLocaleString()}
+            </p>
+            <p>
+              <b>Thời gian thực tế:</b>{" "}
+              {selectedBooking.actualStartTime
+                ? new Date(selectedBooking.actualStartTime).toLocaleString()
+                : "Chưa bắt đầu"}{" "}
+              -{" "}
+              {selectedBooking.actualEndTime
+                ? new Date(selectedBooking.actualEndTime).toLocaleString()
+                : "Chưa kết thúc"}
+            </p>
+
+            {/* Recurring */}
+            {selectedBooking.isRecurring && (
+              <p>
+                <b>Dịch vụ định kỳ:</b> {selectedBooking.recurringPattern} đến{" "}
+                {new Date(
+                  selectedBooking.recurringEndDate
+                ).toLocaleDateString()}
+              </p>
+            )}
+
+            {/* Thông tin helper */}
+            <p>
+              <b>Người thực hiện:</b>{" "}
+              {selectedBooking.helperInfo?.name ||
+                selectedBooking.helperId ||
+                "Chưa có"}
+            </p>
+            <p>
+              <b>Ghi chú helper:</b> {selectedBooking.helperNotes || "Không có"}
+            </p>
+
+            {/* Thông tin huỷ */}
+            {selectedBooking.status === 4 && (
+              <>
+                <p>
+                  <b>Đã huỷ lúc:</b>{" "}
+                  {selectedBooking.cancelledAt
+                    ? new Date(selectedBooking.cancelledAt).toLocaleString()
+                    : "Không rõ"}
+                </p>
+                <p>
+                  <b>Huỷ bởi:</b> {selectedBooking.cancelledBy || "Không rõ"}
+                </p>
+                <p>
+                  <b>Lý do huỷ:</b>{" "}
+                  {selectedBooking.cancellationReason || "Không có"}
+                </p>
+              </>
+            )}
 
             <div className="flex justify-end gap-3 mt-5">
               <button
