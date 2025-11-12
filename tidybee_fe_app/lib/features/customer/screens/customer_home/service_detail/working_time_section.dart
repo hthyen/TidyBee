@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:tidybee_fe_app/core/common_services/utils_method.dart';
 
 class WorkingTimeSection extends StatefulWidget {
-  final String price;
-  final Function(double price, DateTime selectedDate)? onPriceChanged;
+  final Function(DateTime selectedDate)? onDateChanged;
   final Function(TimeOfDay start)? onStartTimeChanged;
   final Function(TimeOfDay end)? onEndTimeChanged;
   final Function(bool isRecurring, DateTime? recurringEndDate)?
@@ -12,8 +10,7 @@ class WorkingTimeSection extends StatefulWidget {
 
   const WorkingTimeSection({
     super.key,
-    required this.price,
-    this.onPriceChanged,
+    this.onDateChanged,
     this.onStartTimeChanged,
     this.onEndTimeChanged,
     this.onRecurringChanged,
@@ -45,39 +42,11 @@ class _WorkingTimeSectionState extends State<WorkingTimeSection> {
     return weekdays[date.weekday % 7]; // weekday=7 => CN
   }
 
-  // Get price and format price
-  String _getPrice(DateTime date, String basePriceStr) {
-    double valueInt = double.parse(basePriceStr);
-
-    if (date.weekday == DateTime.sunday) {
-      double increasePrice = valueInt + 50000;
-
-      return UtilsMethod.formatMoney(increasePrice);
-    } else {
-      return UtilsMethod.formatMoney(valueInt);
-    }
-  }
-
-  // Format price into double
-  double _getPriceDouble(DateTime date, String basePriceStr) {
-    double valueInt = double.parse(basePriceStr);
-
-    if (date.weekday == DateTime.sunday) {
-      double increasePrice = valueInt + 50000;
-
-      return increasePrice;
-    } else {
-      return valueInt;
-    }
-  }
-
   @override
   void initState() {
     super.initState();
     // Auto grenerate next 7 days
     _generateNext7Days();
-
-    selectedPrice = double.parse(widget.price); // default price
   }
 
   @override
@@ -129,13 +98,11 @@ class _WorkingTimeSectionState extends State<WorkingTimeSection> {
                 final formattedDate = DateFormat(
                   "dd/MM",
                 ).format(date); //Format date
-                final price = _getPrice(date, widget.price);
 
                 return GestureDetector(
                   onTap: () {
                     setState(() {
                       selectedIndex = index;
-                      selectedPrice = _getPriceDouble(date, widget.price);
 
                       // Add 7 days to selected day
                       recurringEndDate = isRecurring
@@ -146,7 +113,7 @@ class _WorkingTimeSectionState extends State<WorkingTimeSection> {
                     });
 
                     // Pass price data into parent widget
-                    widget.onPriceChanged?.call(selectedPrice, date);
+                    widget.onDateChanged?.call(date);
                   },
                   child: Container(
                     width: 100,
@@ -177,16 +144,6 @@ class _WorkingTimeSectionState extends State<WorkingTimeSection> {
                         Text(
                           formattedDate,
                           style: const TextStyle(fontSize: 13),
-                        ),
-
-                        // Price
-                        Text(
-                          price,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: isSelected ? Colors.orange : Colors.green,
-                            fontWeight: FontWeight.w500,
-                          ),
                         ),
                       ],
                     ),
@@ -340,7 +297,9 @@ class _WorkingTimeSectionState extends State<WorkingTimeSection> {
                       return;
                     }
 
-                    setState(() => selectedEndTime = valueEndtime);
+                    setState(() {
+                      selectedEndTime = valueEndtime;
+                    });
 
                     // Pass end time data into parent widget
                     widget.onEndTimeChanged?.call(valueEndtime);
@@ -376,12 +335,17 @@ class _WorkingTimeSectionState extends State<WorkingTimeSection> {
                 value: isRecurring,
                 activeColor: Colors.amber,
                 onChanged: (value) {
-                  setState(() => isRecurring = value);
+                  setState(() {
+                    isRecurring = value;
 
-                  // Add 7 days to current day
-                  recurringEndDate = isRecurring
-                      ? next7Days[selectedIndex].add(const Duration(days: 7))
-                      : null;
+                    // Add 7 days to current day
+                    recurringEndDate = isRecurring
+                        ? next7Days[selectedIndex].add(const Duration(days: 7))
+                        : null;
+
+                    // Pass data into parent widget
+                    widget.onDateChanged?.call(next7Days[selectedIndex]);
+                  });
 
                   // Pass recurring data into parent widget
                   widget.onRecurringChanged?.call(

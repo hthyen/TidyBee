@@ -1,7 +1,9 @@
 class Booking {
+  final String? bookingId;
   final int? serviceType;
   final String? title;
   final String? helperId;
+  final String? helperName;
   final String? customerId;
   final String? description;
   final ServiceLocation? serviceLocation;
@@ -12,9 +14,12 @@ class Booking {
   final String? helperNotes;
   final bool? isRecurring;
   final String? recurringPattern;
+  final int? status;
   final DateTime? recurringEndDate;
 
   Booking({
+    this.helperName,
+    this.bookingId,
     this.serviceType,
     this.helperId,
     this.customerId,
@@ -26,6 +31,7 @@ class Booking {
     this.scheduledEndTime,
     this.estimatedPrice,
     this.customerNotes,
+    this.status,
     this.isRecurring,
     this.recurringPattern,
     this.recurringEndDate,
@@ -34,15 +40,20 @@ class Booking {
   // Parse data from JSON into model
   factory Booking.fromJson(Map<String, dynamic> json) {
     return Booking(
+      helperName: json['helperName'],
       serviceType: json['serviceType'],
       title: json['title'],
       helperId: json['helperId'],
       helperNotes: json['helperNotes'],
       customerId: json['customerId'],
+      bookingId: json['id'],
+      status: json['status'],
       description: json['description'],
       scheduledStartTime: DateTime.parse(json['scheduledStartTime']),
       scheduledEndTime: DateTime.parse(json['scheduledEndTime']),
-      estimatedPrice: json['estimatedPrice'],
+      estimatedPrice: json['estimatedPrice'] != null
+          ? (json['estimatedPrice'] as num).toDouble()
+          : null,
       customerNotes: json['customerNotes'],
       isRecurring: json['isRecurring'],
       recurringPattern: json['recurringPattern'],

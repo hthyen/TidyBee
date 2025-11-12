@@ -3,7 +3,10 @@ import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tidybee_fe_app/features/auth/screens/login_screen.dart';
 import 'package:tidybee_fe_app/features/auth/screens/register_screen.dart';
+import 'package:tidybee_fe_app/features/customer/model/booking.dart';
+import 'package:tidybee_fe_app/features/customer/screens/customer_booking/customer_asign_helper.dart';
 import 'package:tidybee_fe_app/features/customer/screens/customer_booking/customer_booking_screen.dart';
+import 'package:tidybee_fe_app/features/customer/screens/customer_booking/customer_confirm_booking.dart';
 import 'package:tidybee_fe_app/features/customer/screens/customer_bottom_navigate.dart';
 import 'package:tidybee_fe_app/features/customer/screens/customer_home/customer_home_screen.dart';
 import 'package:tidybee_fe_app/features/customer/screens/customer_home/service_detail/customer_services_detail_screen.dart';
@@ -197,18 +200,42 @@ class AppRouter {
           if (state.extra is Map<String, dynamic>) {
             final data = state.extra as Map<String, dynamic>;
             final String title = data["title"] ?? "Dịch vụ";
-            final String price = data["price"] ?? "";
             final int id = data["id"] ?? 0;
             final String description = data["description"] ?? "Mô tả";
+            final String token = data["token"] ?? "";
 
             return CustomerServicesDetailScreen(
               title: title,
               id: id,
-              price: price,
               description: description,
+              token: token,
             );
           }
           return const NotFoundPage();
+        },
+      ),
+
+      GoRoute(
+        path: "/customer-asign-helper",
+        name: "customer-asign-helper",
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>? ?? {};
+          final token = extra['token'] as String? ?? '';
+          final booking = extra['booking'] as Booking;
+
+          return CustomerAsignHelper(booking: booking, token: token);
+        },
+      ),
+
+      GoRoute(
+        path: "/customer-confirm-booking",
+        name: "customer-confirm-booking",
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>? ?? {};
+          final token = extra['token'] as String? ?? '';
+          final booking = extra['booking'] as Booking;
+
+          return CustomerConfirmBooking(booking: booking, token: token);
         },
       ),
 

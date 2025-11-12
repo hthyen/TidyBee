@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tidybee_fe_app/core/common_services/utils_method.dart';
 import 'package:tidybee_fe_app/core/common_services/location.dart';
 import 'package:tidybee_fe_app/core/common_widgets/notification_service.dart';
 import 'package:tidybee_fe_app/core/theme/app_colors.dart';
@@ -15,15 +15,15 @@ import 'package:tidybee_fe_app/features/customer/services/validate_booking.dart'
 class CustomerServicesDetailScreen extends StatefulWidget {
   final String title;
   final int id;
-  final String price;
   final String description;
+  final String token;
 
   const CustomerServicesDetailScreen({
     super.key,
     required this.title,
     required this.id,
-    required this.price,
     required this.description,
+    required this.token,
   });
 
   @override
@@ -46,7 +46,6 @@ class _CustomerServicesDetailScreenState
   TimeOfDay? _startTime;
   TimeOfDay? _endTime;
   DateTime? _selectedDate;
-  double? _estimatedPrice;
   String? _note;
   bool? _isRecursion = false;
   DateTime? _recursionDate;
@@ -121,7 +120,6 @@ class _CustomerServicesDetailScreenState
       note: _note,
       startTime: _startTime,
       endTime: _endTime,
-      estimatedPrice: _estimatedPrice,
     )) {
       setState(() {
         _isLoading = false;
@@ -160,7 +158,6 @@ class _CustomerServicesDetailScreenState
       },
       "scheduledStartTime": "${startDateTime.toIso8601String()}Z",
       "scheduledEndTime": "${endDateTime.toIso8601String()}Z",
-      "estimatedPrice": _estimatedPrice,
       "customerNotes": _note,
       "isRecurring": _isRecursion,
       "recurringPattern": "week",
@@ -182,9 +179,10 @@ class _CustomerServicesDetailScreenState
       if (newBooking != null) {
         NotificationService.showSuccess(context, "Đặt dịch vụ thành công!");
 
-        await Future.delayed(const Duration(seconds: 1));
-
-        if (mounted) Navigator.pop(context);
+        context.go(
+          "/customer-asign-helper",
+          extra: {"booking": newBooking, "token": widget.token},
+        );
       } else {
         NotificationService.showSuccess(context, "Đặt dịch vụ thất bại!");
       }
@@ -249,11 +247,8 @@ class _CustomerServicesDetailScreenState
 
               // ==== Working time section ====
               WorkingTimeSection(
-                price: widget.price,
-
-                onPriceChanged: (price, date) {
+                onDateChanged: (date) {
                   setState(() {
-                    _estimatedPrice = price;
                     _selectedDate = date;
                   });
                 },
@@ -317,33 +312,6 @@ class _CustomerServicesDetailScreenState
         child: SafeArea(
           child: Row(
             children: [
-              // Left side (Money)
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Title
-                    const Text(
-                      "Tổng tiền",
-                      style: TextStyle(fontSize: 14, color: Colors.black54),
-                    ),
-
-                    const SizedBox(height: 4),
-
-                    // Title money
-                    Text(
-                      UtilsMethod.formatMoney(_estimatedPrice ?? 0),
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
               // Button order
               ElevatedButton(
                 style: ElevatedButton.styleFrom(

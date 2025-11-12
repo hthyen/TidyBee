@@ -7,6 +7,9 @@ import 'package:tidybee_fe_app/features/customer/model/booking.dart';
 class BookingServices {
   final String requestBookingUrl = dotenv.env['API_REQUEST_BOOKING'] ?? '';
   final String getBooking = dotenv.env['API_GET_BOOKING'] ?? '';
+  final String setHelperForBooking =
+      dotenv.env['API_ASSIGN_HELPER_FOR_BOOKING'] ?? '';
+  final String getBookingById = dotenv.env['API_GET_BOOKING_BY_ID'] ?? '';
 
   // Future - asynchronous createBooking
   Future<Booking?> createBooking(
@@ -62,6 +65,60 @@ class BookingServices {
           .toList();
 
       return bookings;
+    } else {
+      final errorMessage = _extractErrorMessage(response);
+      throw Exception(errorMessage);
+    }
+  }
+
+  // Future - asynchronous get Booking By Id
+  Future<Booking> getUserBookingById(String token, String bookingId) async {
+    final url = Uri.parse('$getBookingById/$bookingId');
+
+    final response = await http.get(
+      url,
+      headers: {
+        "Authorization": "Bearer $token",
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+    );
+
+    if (response.statusCode == 200) {
+      // Forces to use UTF-8 encoding to avoid issues with special characters (Vietnamese)
+      final jsonData = jsonDecode(utf8.decode(response.bodyBytes))['data'];
+
+      // Convert JSON → Booking model
+      return Booking.fromJson(jsonData);
+    } else {
+      final errorMessage = _extractErrorMessage(response);
+      throw Exception(errorMessage);
+    }
+  }
+
+  // Set helper for booing
+  Future<Booking?> assignHelperToBooking({
+    required String bookingId,
+    required String helperId,
+    required String token,
+    String? note,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$setHelperForBooking/$bookingId/select-helpers'),
+      headers: {
+        "Authorization": "Bearer $token",
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+      body: jsonEncode({
+        "selectedHelperIds": [helperId],
+        "additionalNotes": note ?? "",
+      }),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final Map<String, dynamic> data = jsonDecode(response.body);
+      return Booking.fromJson(data['data']);
     } else {
       final errorMessage = _extractErrorMessage(response);
       throw Exception(errorMessage);

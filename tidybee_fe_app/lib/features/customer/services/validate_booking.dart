@@ -9,7 +9,6 @@ class ValidateBooking {
     required TimeOfDay? startTime,
     required TimeOfDay? endTime,
     required String? note,
-    required double? estimatedPrice,
   }) {
     if (latitude == null || longitude == null) {
       return showError(context, "Không thể xác định vị trí, vui lòng bật GPS.");
@@ -29,13 +28,6 @@ class ValidateBooking {
 
     if (note == null || note.isEmpty) {
       return showError(context, "Ghi chú không được để trống.");
-    }
-
-    if (estimatedPrice == null || estimatedPrice <= 0) {
-      return showError(
-        context,
-        "Vui lòng chọn thời gian làm việc hợp lệ để tính giá.",
-      );
     }
 
     return true;
