@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:tidybee_fe_app/core/common_services/format_money.dart';
+import 'package:tidybee_fe_app/core/common_services/utils_method.dart';
 
 class WorkingTimeSection extends StatefulWidget {
   final String price;

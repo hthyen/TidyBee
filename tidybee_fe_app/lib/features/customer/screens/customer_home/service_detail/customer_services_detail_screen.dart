@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tidybee_fe_app/core/common_services/format_money.dart';
+import 'package:tidybee_fe_app/core/common_services/utils_method.dart';
 import 'package:tidybee_fe_app/core/common_services/location.dart';
 import 'package:tidybee_fe_app/core/common_widgets/notification_service.dart';
 import 'package:tidybee_fe_app/core/theme/app_colors.dart';
