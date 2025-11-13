@@ -1,5 +1,5 @@
-// src/pages/Reviews.jsx
 import React, { useState } from "react";
+import { Search, Filter, Star, MessageSquare, User, Calendar } from "lucide-react";
 
 export default function Reviews() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -37,85 +37,239 @@ export default function Reviews() {
 
   const filteredReviews = reviews.filter(
     (review) =>
-      (review.cleaner.toLowerCase().includes(filterCleaner.toLowerCase()) || !filterCleaner) &&
+      (review.cleaner.toLowerCase().includes(filterCleaner.toLowerCase()) ||
+        !filterCleaner) &&
       (filterRating ? review.rating === parseInt(filterRating) : true) &&
       (review.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
         review.comment.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
+  const getRatingColor = (rating) => {
+    if (rating >= 4) return "bg-green-100 text-green-700";
+    if (rating === 3) return "bg-yellow-100 text-yellow-700";
+    return "bg-red-100 text-red-700";
+  };
+
+  const renderStars = (rating) => {
+    return Array.from({ length: 5 }, (_, i) => (
+      <Star
+        key={i}
+        className={`w-4 h-4 ${
+          i < rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300"
+        }`}
+      />
+    ));
+  };
+
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6 text-gray-800">Reviews / Ratings</h1>
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          Reviews / Ratings
+        </h1>
+        <p className="text-gray-600">
+          Xem và quản lý tất cả các đánh giá và xếp hạng trong hệ thống
+        </p>
+      </div>
 
       {/* Filters */}
-      <div className="mb-6 flex flex-wrap gap-4 items-center">
-        <input
-          type="text"
-          placeholder="Search by comment or customer..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="px-4 py-2 border rounded-lg shadow-sm focus:ring focus:ring-green-200 focus:border-green-400"
-        />
-        <input
-          type="text"
-          placeholder="Filter by Cleaner"
-          value={filterCleaner}
-          onChange={(e) => setFilterCleaner(e.target.value)}
-          className="px-4 py-2 border rounded-lg"
-        />
-        <select
-          value={filterRating}
-          onChange={(e) => setFilterRating(e.target.value)}
-          className="border px-4 py-2 rounded-lg"
-        >
-          <option value="">All Ratings</option>
-          <option value="5">5 Stars</option>
-          <option value="4">4 Stars</option>
-          <option value="3">3 Stars</option>
-          <option value="2">2 Stars</option>
-          <option value="1">1 Star</option>
-        </select>
+      <div className="bg-white p-6 rounded-xl shadow-soft border border-gray-100">
+        <div className="flex flex-col sm:flex-row gap-4">
+          {/* Search */}
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Tìm kiếm
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Tìm kiếm theo khách hàng hoặc bình luận..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors text-gray-900 placeholder-gray-400"
+                aria-label="Search reviews"
+              />
+            </div>
+          </div>
+
+          {/* Filter by Cleaner */}
+          <div className="sm:w-64">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Lọc theo Cleaner
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Filter className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Tên cleaner..."
+                value={filterCleaner}
+                onChange={(e) => setFilterCleaner(e.target.value)}
+                className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors text-gray-900 placeholder-gray-400"
+                aria-label="Filter by cleaner"
+              />
+            </div>
+          </div>
+
+          {/* Filter by Rating */}
+          <div className="sm:w-48">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Lọc theo Rating
+            </label>
+            <select
+              value={filterRating}
+              onChange={(e) => setFilterRating(e.target.value)}
+              className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors text-gray-900 bg-white"
+              aria-label="Filter by rating"
+            >
+              <option value="">Tất cả Ratings</option>
+              <option value="5">5 Sao</option>
+              <option value="4">4 Sao</option>
+              <option value="3">3 Sao</option>
+              <option value="2">2 Sao</option>
+              <option value="1">1 Sao</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       {/* Reviews Table */}
-      <div className="overflow-x-auto bg-white rounded-lg shadow">
-        <table className="min-w-full border-collapse">
-          <thead className="bg-green-100 text-gray-700">
-            <tr>
-              <th className="p-3 text-left">ID</th>
-              <th className="p-3 text-left">Booking</th>
-              <th className="p-3 text-left">Cleaner</th>
-              <th className="p-3 text-left">Customer</th>
-              <th className="p-3 text-left">Rating</th>
-              <th className="p-3 text-left">Comment</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredReviews.map((r) => (
-              <tr key={r.id} className="border-t hover:bg-gray-50 transition">
-                <td className="p-3">{r.id}</td>
-                <td className="p-3">{r.booking}</td>
-                <td className="p-3">{r.cleaner}</td>
-                <td className="p-3">{r.customer}</td>
-                <td className="p-3">
-                  <span
-                    className={`px-2 py-1 rounded-full text-sm font-medium ${
-                      r.rating >= 4
-                        ? "bg-green-100 text-green-700"
-                        : r.rating === 3
-                        ? "bg-orange-100 text-orange-700"
-                        : "bg-red-100 text-red-700"
-                    }`}
-                  >
-                    {r.rating} ★
-                  </span>
-                </td>
-                <td className="p-3">{r.comment}</td>
+      <div className="bg-white rounded-xl shadow-soft border border-gray-100 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  ID
+                </th>
+                <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Booking
+                </th>
+                <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Cleaner
+                </th>
+                <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Customer
+                </th>
+                <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Rating
+                </th>
+                <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Comment
+                </th>
+                <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Ngày
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredReviews.length > 0 ? (
+                filteredReviews.map((r) => (
+                  <tr
+                    key={r.id}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {r.id}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-gray-400" />
+                        {r.booking}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <div className="flex items-center gap-2">
+                        <User className="w-4 h-4 text-gray-400" />
+                        {r.cleaner}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <div className="flex items-center gap-2">
+                        <User className="w-4 h-4 text-gray-400" />
+                        {r.customer}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${getRatingColor(
+                            r.rating
+                          )}`}
+                        >
+                          <Star className="w-3.5 h-3.5 fill-current" />
+                          {r.rating}
+                        </span>
+                        <div className="flex items-center gap-0.5">
+                          {renderStars(r.rating)}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 text-sm text-gray-600">
+                      <div className="flex items-start gap-2 max-w-md">
+                        <MessageSquare className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                        <span className="line-clamp-2">{r.comment}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {new Date(r.date).toLocaleDateString("vi-VN")}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan="7"
+                    className="px-4 py-12 text-center text-gray-500"
+                  >
+                    <Star className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                    <p className="font-medium">Không tìm thấy reviews nào.</p>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
+
+      {/* Summary Stats */}
+      {filteredReviews.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="bg-white p-4 rounded-xl shadow-soft border border-gray-100">
+            <p className="text-sm font-medium text-gray-600 mb-1">
+              Tổng số reviews
+            </p>
+            <p className="text-2xl font-bold text-gray-900">
+              {filteredReviews.length}
+            </p>
+          </div>
+          <div className="bg-white p-4 rounded-xl shadow-soft border border-gray-100">
+            <p className="text-sm font-medium text-gray-600 mb-1">
+              Rating trung bình
+            </p>
+            <p className="text-2xl font-bold text-gray-900">
+              {(
+                filteredReviews.reduce((sum, r) => sum + r.rating, 0) /
+                filteredReviews.length
+              ).toFixed(1)}{" "}
+              <Star className="w-5 h-5 inline-block text-yellow-400 fill-yellow-400" />
+            </p>
+          </div>
+          <div className="bg-white p-4 rounded-xl shadow-soft border border-gray-100">
+            <p className="text-sm font-medium text-gray-600 mb-1">
+              Reviews 5 sao
+            </p>
+            <p className="text-2xl font-bold text-green-600">
+              {filteredReviews.filter((r) => r.rating === 5).length}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -10,18 +10,20 @@ import {
 } from "recharts";
 import { getMyTransactions } from "../services/payment";
 import axios from "axios";
+import { DollarSign, CreditCard, TrendingUp, RefreshCw, Loader2 } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function Payments() {
   const [transactions, setTransactions] = useState([]);
   const [users, setUsers] = useState({});
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(20);
+  const [pageSize] = useState(5);
   const [totalPages, setTotalPages] = useState(1);
 
   const token = localStorage.getItem("token");
 
-  // ⚡️ Lấy danh sách người dùng
+  // 🔹 Lấy danh sách người dùng
   const fetchUsers = async () => {
     try {
       const res = await axios.get(
@@ -37,33 +39,37 @@ export default function Payments() {
     }
   };
 
-  // ⚡️ Lấy danh sách giao dịch
+  // 🔹 Lấy danh sách giao dịch với phân trang
   const fetchTransactions = async (pageNum = 1) => {
     try {
       setLoading(true);
-      const { transactions, totalPages } = await getMyTransactions(
-        token,
-        pageNum,
-        pageSize
-      );
-      setTransactions(transactions);
+      const res = await getMyTransactions(token, pageNum, pageSize);
+      const { transactions: data = [], totalItems = data.length } = res;
+      setTransactions(data);
       setPage(pageNum);
-      setTotalPages(totalPages);
+      setTotalPages(Math.ceil(totalItems / pageSize) || 1);
     } catch (err) {
       console.error("❌ Lỗi tải danh sách giao dịch:", err);
+      toast.error("Không thể tải danh sách giao dịch!");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchUsers();
-    fetchTransactions();
+    fetchUsers().then(() => fetchTransactions(1));
   }, []);
 
-  // 🧮 Tính toán thống kê
-  const stats = useMemo(() => {
-    return {
+  // 🔹 Helper lấy tên khách hàng
+  const getCustomerName = (customerId) => {
+    return (
+      users[String(customerId)] || `#${String(customerId)?.slice(0, 6)}...`
+    );
+  };
+
+  // 🔹 Tính toán thống kê
+  const stats = useMemo(
+    () => ({
       totalRevenue: transactions.reduce((s, t) => s + (t.amount || 0), 0),
       totalPlatformFees: transactions.reduce(
         (s, t) => s + (t.platformFee || 0),
@@ -74,10 +80,11 @@ export default function Payments() {
         0
       ),
       totalRefunds: transactions.reduce((s, t) => s + (t.refundAmount || 0), 0),
-    };
-  }, [transactions]);
+    }),
+    [transactions]
+  );
 
-  // 📊 Chuẩn hóa dữ liệu biểu đồ
+  // 🔹 Chuẩn hóa dữ liệu biểu đồ
   const chartData = useMemo(() => {
     const acc = [];
     transactions.forEach((t) => {
@@ -96,11 +103,11 @@ export default function Payments() {
     );
   }, [transactions]);
 
-  // 🔠 Hàm helper hiển thị phương thức thanh toán
+  // 🔹 Hiển thị phương thức thanh toán
   const getPaymentMethodLabel = (method) => {
     switch (method) {
       case 1:
-        return "Tiền mặt ";
+        return "Tiền mặt";
       case 4:
         return "Chuyển khoản";
       default:
@@ -108,7 +115,7 @@ export default function Payments() {
     }
   };
 
-  // 🔠 Hàm helper hiển thị trạng thái tiếng Việt + màu sắc
+  // 🔹 Hiển thị trạng thái
   const getStatusInfo = (status) => {
     switch (status) {
       case 1:
@@ -137,167 +144,249 @@ export default function Payments() {
     }
   };
 
-  return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6 text-gray-800">
-        💰 Quản lý Thanh toán
-      </h1>
+  const statCards = [
+    {
+      label: "Tổng doanh thu",
+      value: stats.totalRevenue,
+      icon: DollarSign,
+      color: "green",
+      bgColor: "bg-green-50",
+      textColor: "text-green-600",
+      iconColor: "text-green-500",
+    },
+    {
+      label: "Phí nền tảng",
+      value: stats.totalPlatformFees,
+      icon: CreditCard,
+      color: "red",
+      bgColor: "bg-red-50",
+      textColor: "text-red-600",
+      iconColor: "text-red-500",
+    },
+    {
+      label: "Thu nhập cộng tác viên",
+      value: stats.totalHelperEarnings,
+      icon: TrendingUp,
+      color: "blue",
+      bgColor: "bg-blue-50",
+      textColor: "text-blue-600",
+      iconColor: "text-blue-500",
+    },
+    {
+      label: "Hoàn tiền",
+      value: stats.totalRefunds,
+      icon: RefreshCw,
+      color: "orange",
+      bgColor: "bg-orange-50",
+      textColor: "text-orange-600",
+      iconColor: "text-orange-500",
+    },
+  ];
 
-      {/* Thống kê */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <Card label="Tổng doanh thu" value={stats.totalRevenue} color="green" />
-        <Card
-          label="Phí nền tảng"
-          value={stats.totalPlatformFees}
-          color="red"
-        />
-        <Card
-          label="Thu nhập cộng tác viên"
-          value={stats.totalHelperEarnings}
-          color="blue"
-        />
-        <Card label="Hoàn tiền" value={stats.totalRefunds} color="orange" />
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          Quản lý Thanh toán
+        </h1>
+        <p className="text-gray-600">
+          Xem và quản lý tất cả các giao dịch thanh toán trong hệ thống
+        </p>
       </div>
 
-      {/* Bảng giao dịch */}
-      <div className="overflow-x-auto bg-white rounded-lg shadow mb-6">
-        <table className="min-w-full border-collapse">
-          <thead className="bg-green-100 text-gray-700 text-sm">
-            <tr>
-              <th className="p-3 text-left">#</th>
-              <th className="p-3 text-left">Mã đặt</th>
-              <th className="p-3 text-left">Khách hàng</th>
-              <th className="p-3 text-left">Số tiền</th>
-              <th className="p-3 text-left">Trạng thái</th>
-              <th className="p-3 text-left">Ngày</th>
-              <th className="p-3 text-left">Phương thức</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+        {statCards.map((stat, index) => {
+          const Icon = stat.icon;
+          return (
+            <div
+              key={index}
+              className="bg-white p-6 rounded-xl shadow-soft hover:shadow-medium transition-all duration-200 border border-gray-100"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className={`p-3 rounded-lg ${stat.bgColor}`}>
+                  <Icon className={`w-6 h-6 ${stat.iconColor}`} />
+                </div>
+              </div>
+              <h3 className="text-sm font-medium text-gray-600 mb-1">
+                {stat.label}
+              </h3>
+              <p className={`text-2xl font-bold ${stat.textColor}`}>
+                {stat.value.toLocaleString()} đ
+              </p>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Transactions Table */}
+      <div className="bg-white rounded-xl shadow-soft border border-gray-100 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
               <tr>
-                <td colSpan={7} className="text-center p-4 italic">
-                  ⏳ Đang tải dữ liệu...
-                </td>
+                <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  #
+                </th>
+                <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Mã đặt
+                </th>
+                <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Khách hàng
+                </th>
+                <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Số tiền
+                </th>
+                <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Trạng thái
+                </th>
+                <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Ngày
+                </th>
+                <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Phương thức
+                </th>
               </tr>
-            ) : transactions.length ? (
-              transactions.map((t, i) => (
-                <tr
-                  key={t.id}
-                  className="border-t hover:bg-gray-50 transition text-sm"
-                >
-                  <td className="p-3 text-gray-600">{i + 1}</td>
-                  <td className="p-3">{t.bookingRequestId || "--"}</td>
-                  <td className="p-3 font-medium text-gray-900">
-                    {users[String(t.customerId)] ? (
-                      users[String(t.customerId)]
-                    ) : (
-                      <span className="text-gray-400 italic">
-                        #{String(t.customerId)?.slice(0, 6)}...
-                      </span>
-                    )}
-                  </td>
-
-                  <td className="p-3 text-green-700 font-semibold">
-                    {(t.amount || 0).toLocaleString()} đ
-                  </td>
-                  <td className="p-3">
-                    {(() => {
-                      const { label, color } = getStatusInfo(t.status);
-                      return (
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-semibold ${color}`}
-                        >
-                          {label}
-                        </span>
-                      );
-                    })()}
-                  </td>
-
-                  <td className="p-3 text-gray-500">
-                    {new Date(t.createdAt).toLocaleDateString("vi-VN")}
-                  </td>
-                  <td className="p-3">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        t.paymentMethod === 1
-                          ? "bg-yellow-100 text-yellow-700"
-                          : t.paymentMethod === 4
-                          ? "bg-blue-100 text-blue-700"
-                          : "bg-gray-100 text-gray-700"
-                      }`}
-                    >
-                      {getPaymentMethodLabel(t.paymentMethod)}
-                    </span>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="px-4 py-12 text-center">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary-600 mx-auto mb-3" />
+                    <p className="text-gray-600 font-medium">Đang tải dữ liệu...</p>
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td
-                  colSpan={7}
-                  className="text-center p-4 italic text-gray-500"
-                >
-                  Không có dữ liệu giao dịch
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              ) : transactions.length ? (
+                transactions.map((t, i) => {
+                  const statusInfo = getStatusInfo(t.status);
+                  return (
+                    <tr
+                      key={t.id}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {i + 1 + (page - 1) * pageSize}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {t.bookingRequestId || "--"}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {getCustomerName(t.customerId)}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-green-600 flex items-center gap-1">
+                        <DollarSign className="w-4 h-4" />
+                        {(t.amount || 0).toLocaleString()} đ
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <span
+                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${statusInfo.color}`}
+                        >
+                          {statusInfo.label}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(t.createdAt).toLocaleDateString("vi-VN")}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <span
+                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                            t.paymentMethod === 1
+                              ? "bg-yellow-100 text-yellow-700"
+                              : t.paymentMethod === 4
+                              ? "bg-blue-100 text-blue-700"
+                              : "bg-gray-100 text-gray-700"
+                          }`}
+                        >
+                          {getPaymentMethodLabel(t.paymentMethod)}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="px-4 py-12 text-center text-gray-500"
+                  >
+                    <CreditCard className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                    <p className="font-medium">Không có dữ liệu giao dịch</p>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {/* Phân trang */}
+      {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center gap-3 mb-6">
+        <div className="flex items-center justify-center gap-3">
           <button
             disabled={page <= 1}
             onClick={() => fetchTransactions(page - 1)}
-            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+            className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+            aria-label="Previous page"
           >
             ← Trước
           </button>
-          <span className="text-gray-700">
+          <span className="px-4 py-2 text-sm text-gray-700 font-medium">
             Trang {page}/{totalPages}
           </span>
           <button
             disabled={page >= totalPages}
             onClick={() => fetchTransactions(page + 1)}
-            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+            className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+            aria-label="Next page"
           >
             Sau →
           </button>
         </div>
       )}
 
-      {/* Biểu đồ doanh thu */}
-      <section className="bg-white p-6 rounded-2xl shadow">
-        <h2 className="text-xl font-semibold mb-4 text-gray-700">
-          Biểu đồ doanh thu theo ngày
-        </h2>
+      {/* Revenue Chart */}
+      <div className="bg-white p-6 rounded-xl shadow-soft border border-gray-100">
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-1">
+            Biểu đồ doanh thu theo ngày
+          </h2>
+          <p className="text-sm text-gray-600">
+            Biểu đồ thể hiện doanh thu trong các ngày gần đây
+          </p>
+        </div>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData}>
-              <XAxis dataKey="day" />
-              <YAxis />
-              <Tooltip />
+              <XAxis
+                dataKey="day"
+                stroke="#6b7280"
+                fontSize={12}
+                tickLine={false}
+              />
+              <YAxis
+                stroke="#6b7280"
+                fontSize={12}
+                tickLine={false}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "white",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: "8px",
+                  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                }}
+              />
               <Legend />
-              <Bar dataKey="revenue" fill="#22c55e" />
+              <Bar
+                dataKey="revenue"
+                fill="#22c55e"
+                radius={[8, 8, 0, 0]}
+              />
             </BarChart>
           </ResponsiveContainer>
         </div>
-      </section>
-    </div>
-  );
-}
-
-// 🧩 Component Card tái sử dụng
-function Card({ label, value, color }) {
-  return (
-    <div className="bg-white p-4 rounded-xl shadow text-center">
-      <p className="text-gray-500">{label}</p>
-      <p className={`text-xl font-bold text-${color}-600`}>
-        {value.toLocaleString()} đ
-      </p>
+      </div>
     </div>
   );
 }

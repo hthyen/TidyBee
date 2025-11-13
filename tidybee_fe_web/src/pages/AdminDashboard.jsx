@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   BarChart,
   Bar,
@@ -11,114 +11,215 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import {
+  Users,
+  Calendar,
+  CheckCircle,
+  DollarSign,
+  TrendingUp,
+} from "lucide-react";
 
 export default function AdminDashboard() {
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      window.location.href = "/";
-    }
-  }, []);
-
-  const revenueData = [
-    { day: "15-10", revenue: 120 },
-    { day: "16-10", revenue: 150 },
-    { day: "17-10", revenue: 90 },
-    { day: "18-10", revenue: 200 },
-  ];
-
-  const orderStatusData = [
-    { name: "Completed", value: 89 },
-    { name: "Active", value: 35 },
-    { name: "Pending", value: 12 },
-    { name: "Canceled", value: 5 },
-  ];
+  const [bookingData, setBookingData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const COLORS = ["#22c55e", "#3b82f6", "#f59e0b", "#ef4444"];
 
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) window.location.href = "/";
+
+    async function fetchBookings() {
+      try {
+        const res = await fetch("YOUR_API_ENDPOINT_HERE", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        setBookingData(data.data);
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching bookings:", err);
+        setLoading(false);
+      }
+    }
+
+    fetchBookings();
+  }, []);
+
+  if (loading) return <p className="text-center mt-10">Loading...</p>;
+
+  // Stats cards
+  const stats = [
+    {
+      label: "Tổng số đơn đặt chỗ",
+      value: bookingData?.overview.totalBookings ?? 0,
+      icon: Calendar,
+      bgColor: "bg-purple-50",
+      textColor: "text-purple-600",
+      iconColor: "text-purple-500",
+    },
+    {
+      label: "Đơn đang chờ",
+      value: bookingData?.overview.pendingBookings ?? 0,
+      icon: Calendar,
+      bgColor: "bg-yellow-50",
+      textColor: "text-yellow-600",
+      iconColor: "text-yellow-500",
+    },
+    {
+      label: "Đơn đã hoàn thành",
+      value: bookingData?.overview.completedBookings ?? 0,
+      icon: CheckCircle,
+      bgColor: "bg-green-50",
+      textColor: "text-green-600",
+      iconColor: "text-green-500",
+    },
+    {
+      label: "Doanh thu ước tính",
+      value: `$${bookingData?.revenue.estimatedPipelineValue ?? 0}`,
+      icon: DollarSign,
+      bgColor: "bg-emerald-50",
+      textColor: "text-emerald-600",
+      iconColor: "text-emerald-500",
+    },
+  ];
+
+  // Pie chart: trạng thái booking
+  const orderStatusData = [
+    { name: "Completed", value: bookingData?.overview.completedBookings ?? 0 },
+    { name: "Active", value: bookingData?.overview.activeBookings ?? 0 },
+    { name: "Pending", value: bookingData?.overview.pendingBookings ?? 0 },
+    { name: "Canceled", value: bookingData?.overview.cancelledBookings ?? 0 },
+  ];
+
+  // Bar chart: doanh thu theo tháng
+  const revenueData =
+    bookingData?.monthlyTrends.map((item) => ({
+      day: item.month,
+      revenue: item.revenue,
+    })) ?? [];
+
   return (
-    <div className="p-6">
-      <main className="flex-1 p-6 overflow-y-auto">
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
           Tổng quan hệ thống
         </h1>
+        <p className="text-gray-600">
+          Xem tổng quan về hoạt động và hiệu suất của hệ thống
+        </p>
+      </div>
 
-        {/* Thẻ thống kê */}
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white p-5 rounded-2xl shadow hover:shadow-lg transition">
-            <h3 className="text-gray-500">Tổng số người dùng</h3>
-            <p className="text-3xl font-semibold text-green-600 mt-2">120</p>
-          </div>
-
-          <div className="bg-white p-5 rounded-2xl shadow hover:shadow-lg transition">
-            <h3 className="text-gray-500">Đơn đang hoạt động</h3>
-            <p className="text-3xl font-semibold text-green-600 mt-2">35</p>
-          </div>
-
-          <div className="bg-white p-5 rounded-2xl shadow hover:shadow-lg transition">
-            <h3 className="text-gray-500">Đơn đã hoàn thành</h3>
-            <p className="text-3xl font-semibold text-green-600 mt-2">89</p>
-          </div>
-
-          <div className="bg-white p-5 rounded-2xl shadow hover:shadow-lg transition">
-            <h3 className="text-gray-500">Doanh thu tháng</h3>
-            <p className="text-3xl font-semibold text-green-600 mt-2">$4,200</p>
-          </div>
-        </section>
-
-        {/* Biểu đồ */}
-        <section className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Doanh thu theo ngày */}
-          <div className="bg-white p-6 rounded-2xl shadow">
-            <h2 className="text-xl font-semibold mb-4 text-gray-700">
-              Doanh thu theo ngày
-            </h2>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={revenueData}>
-                  <XAxis dataKey="day" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="revenue" fill="#22c55e" />
-                </BarChart>
-              </ResponsiveContainer>
+      {/* Stats Cards */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+        {stats.map((stat, index) => {
+          const Icon = stat.icon;
+          return (
+            <div
+              key={index}
+              className="bg-white p-6 rounded-xl shadow-soft hover:shadow-medium transition-all duration-200 border border-gray-100"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className={`p-3 rounded-lg ${stat.bgColor}`}>
+                  <Icon className={`w-6 h-6 ${stat.iconColor}`} />
+                </div>
+                <TrendingUp className="w-5 h-5 text-gray-400" />
+              </div>
+              <h3 className="text-sm font-medium text-gray-600 mb-1">
+                {stat.label}
+              </h3>
+              <p className={`text-2xl font-bold ${stat.textColor}`}>
+                {stat.value}
+              </p>
             </div>
-          </div>
+          );
+        })}
+      </section>
 
-          {/* Số đơn theo trạng thái */}
-          <div className="bg-white p-6 rounded-2xl shadow">
-            <h2 className="text-xl font-semibold mb-4 text-gray-700">
+      {/* Charts */}
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+        {/* Revenue Chart */}
+        <div className="bg-white p-6 rounded-xl shadow-soft border border-gray-100">
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-1">
+              Doanh thu theo tháng
+            </h2>
+            <p className="text-sm text-gray-600">
+              Biểu đồ thể hiện doanh thu theo tháng
+            </p>
+          </div>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={revenueData}>
+                <XAxis
+                  dataKey="day"
+                  stroke="#6b7280"
+                  fontSize={12}
+                  tickLine={false}
+                />
+                <YAxis stroke="#6b7280" fontSize={12} tickLine={false} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "white",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "8px",
+                    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                  }}
+                />
+                <Legend />
+                <Bar dataKey="revenue" fill="#22c55e" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Order Status Chart */}
+        <div className="bg-white p-6 rounded-xl shadow-soft border border-gray-100">
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-1">
               Số đơn theo trạng thái
             </h2>
-            <div className="h-64 flex items-center justify-center">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={orderStatusData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    fill="#8884d8"
-                    label
-                  >
-                    {orderStatusData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+            <p className="text-sm text-gray-600">
+              Phân bổ các đơn hàng theo trạng thái hiện tại
+            </p>
           </div>
-        </section>
-      </main>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={orderStatusData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  label={(entry) => `${entry.name}: ${entry.value}`}
+                >
+                  {orderStatusData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "white",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "8px",
+                    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                  }}
+                />
+                <Legend
+                  wrapperStyle={{ paddingTop: "20px" }}
+                  iconType="circle"
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
