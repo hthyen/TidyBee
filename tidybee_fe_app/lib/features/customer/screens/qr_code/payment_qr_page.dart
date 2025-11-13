@@ -33,6 +33,7 @@ class _PaymentQrPageState extends State<PaymentQrPage> {
   void initState() {
     super.initState();
     _startPolling();
+    print(widget.qrCodeUrl);
   }
 
   // Create timer run every 5s, call API get payment in 5 min
@@ -108,8 +109,8 @@ class _PaymentQrPageState extends State<PaymentQrPage> {
             // Image QR
             Image.network(
               widget.qrCodeUrl,
-              width: 350,
-              height: 350,
+              width: 250,
+              height: 250,
               fit: BoxFit.contain,
             ),
 
