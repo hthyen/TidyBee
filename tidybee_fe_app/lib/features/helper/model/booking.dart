@@ -30,11 +30,11 @@ class Booking {
       helperId: json['helperId']?.toString(),
       proposedPrice: _parseInt(json['proposedPrice']),
       message: json['message']?.toString(),
-      responseDate: _parseDbDate(json['responseDate']),
+      responseDate: _parseExactDate(json['responseDate']),
       isAccepted: json['isAccepted'] as bool? ?? false,
-      createdAt: _parseDbDate(json['createdAt']),
+      createdAt: _parseExactDate(json['createdAt']),
       helperInfo: json['helperInfo'] != null
-          ? Helper.fromJson({'data': json['helperInfo']})
+          ? Helper.fromJson(json['helperInfo'])
           : null,
     );
   }
@@ -46,32 +46,44 @@ class Booking {
       "helperId": helperId,
       "proposedPrice": proposedPrice,
       "message": message,
-      // Giữ nguyên giờ như DB, không tự convert timezone
-      "responseDate": responseDate?.toIso8601String().replaceAll('Z', ''),
+      "responseDate": responseDate != null ? _formatDate(responseDate!) : null,
       "isAccepted": isAccepted,
-      "createdAt": createdAt?.toIso8601String().replaceAll('Z', ''),
+      "createdAt": createdAt != null ? _formatDate(createdAt!) : null,
       if (helperInfo != null) "helperInfo": helperInfo!.toJson(),
     };
   }
 
-  /// 🔹 Hàm parse thủ công, loại bỏ ký tự 'Z' để giữ nguyên giờ từ database
-  static DateTime? _parseDbDate(dynamic value) {
+  static DateTime? _parseExactDate(dynamic value) {
     if (value == null) return null;
     try {
-      String raw = value.toString();
-      if (raw.endsWith('Z')) raw = raw.replaceAll('Z', '');
-      final parsed = DateTime.parse(raw);
+      String raw = value.toString().replaceAll('Z', '');
+
+      final parts = raw.split('T');
+      final dateParts = parts[0].split('-');
+      final timeParts = parts.length > 1
+          ? parts[1].split(':')
+          : ['0', '0', '0'];
+
       return DateTime(
-        parsed.year,
-        parsed.month,
-        parsed.day,
-        parsed.hour,
-        parsed.minute,
-        parsed.second,
+        int.parse(dateParts[0]),
+        int.parse(dateParts[1]),
+        int.parse(dateParts[2]),
+        int.parse(timeParts[0]),
+        int.parse(timeParts[1]),
+        int.parse(timeParts[2].split('.')[0]),
       );
     } catch (e) {
       return null;
     }
+  }
+
+  static String _formatDate(DateTime date) {
+    return "${date.year.toString().padLeft(4, '0')}-"
+        "${date.month.toString().padLeft(2, '0')}-"
+        "${date.day.toString().padLeft(2, '0')}T"
+        "${date.hour.toString().padLeft(2, '0')}:"
+        "${date.minute.toString().padLeft(2, '0')}:"
+        "${date.second.toString().padLeft(2, '0')}";
   }
 
   static int? _parseInt(dynamic value) {
@@ -101,7 +113,7 @@ extension HelperJson on Helper {
       "workingDays": workingDays,
       "backgroundChecked": backgroundChecked,
       "documents": documents,
-      "createdAt": createdAt?.toIso8601String().replaceAll('Z', ''),
+      "createdAt": createdAt != null ? Booking._formatDate(createdAt!) : null,
       "helperName": helperName,
       "helperAvatar": helperAvatar,
     };

@@ -56,7 +56,7 @@ class HelperProfileHeader extends StatelessWidget {
               const Icon(Icons.star, color: Colors.orange, size: 18),
               const SizedBox(width: 4),
               Text(
-                rating.toString(),
+                rating.toStringAsFixed(1),
                 style: const TextStyle(fontWeight: FontWeight.w500),
               ),
               if (reviewCount > 0) ...[

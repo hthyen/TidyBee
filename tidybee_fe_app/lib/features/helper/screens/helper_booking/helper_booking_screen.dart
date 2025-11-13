@@ -35,7 +35,18 @@ class _HelperBookingScreenState extends State<HelperBookingScreen>
     super.initState();
     _bookingService = BookingService();
     _tabController = TabController(length: 2, vsync: this);
-    _loadBookings();
+
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) {
+        if (_tabController.index == 0) {
+          _loadUpcomingBookings();
+        } else {
+          _loadCompletedBookings(); // GỌI API status=5
+        }
+      }
+    });
+
+    _loadUpcomingBookings(); // Load mặc định
   }
 
   @override
@@ -44,7 +55,8 @@ class _HelperBookingScreenState extends State<HelperBookingScreen>
     super.dispose();
   }
 
-  Future<void> _loadBookings() async {
+  // === LOAD UPCOMING (Available for helper) ===
+  Future<void> _loadUpcomingBookings() async {
     if (widget.token == null || !mounted) return;
     setState(() => _isLoading = true);
 
@@ -56,7 +68,12 @@ class _HelperBookingScreenState extends State<HelperBookingScreen>
 
       setState(() {
         _allBookings = bookings;
-        _classifyBookings();
+        _upcoming = _allBookings.where((b) => b.status != 5).toList();
+        _upcoming.sort(
+          (a, b) => (a.scheduledStartTime ?? farFuture).compareTo(
+            b.scheduledStartTime ?? farFuture,
+          ),
+        );
         _isLoading = false;
       });
     } catch (e) {
@@ -69,14 +86,30 @@ class _HelperBookingScreenState extends State<HelperBookingScreen>
     }
   }
 
-  void _classifyBookings() {
-    _upcoming = _allBookings.where((b) => b.status != 5).toList();
-    _completed = _allBookings.where((b) => b.status == 5).toList();
-    _upcoming.sort(
-      (a, b) => (a.scheduledStartTime ?? farFuture).compareTo(
-        b.scheduledStartTime ?? farFuture,
-      ),
-    );
+  // === LOAD COMPLETED (status = 5) ===
+  Future<void> _loadCompletedBookings() async {
+    if (widget.token == null || !mounted) return;
+    setState(() => _isLoading = true);
+
+    try {
+      final completed = await _bookingService.getCompletedBookings(
+        token: widget.token!,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _completed = completed;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
+      }
+    }
   }
 
   static final farFuture = DateTime.now().add(const Duration(days: 365));
@@ -102,14 +135,17 @@ class _HelperBookingScreenState extends State<HelperBookingScreen>
           ? const Center(child: CircularProgressIndicator())
           : TabBarView(
               controller: _tabController,
-              children: [_buildUpcomingTab(), _buildCompletedTab()],
+              children: [
+                _buildUpcomingTab(),
+                _buildCompletedTab(), // DÙNG _completed TỪ API status=5
+              ],
             ),
     );
   }
 
   Widget _buildUpcomingTab() {
     return RefreshIndicator(
-      onRefresh: _loadBookings,
+      onRefresh: _loadUpcomingBookings,
       child: Column(
         children: [
           BookingCalendar(
@@ -129,7 +165,7 @@ class _HelperBookingScreenState extends State<HelperBookingScreen>
 
   Widget _buildCompletedTab() {
     return RefreshIndicator(
-      onRefresh: _loadBookings,
+      onRefresh: _loadCompletedBookings, // GỌI API status=5
       child: _completed.isEmpty
           ? EmptyState(message: "Chưa có công việc hoàn thành")
           : _buildJobList(_completed),
@@ -177,7 +213,6 @@ class _HelperBookingScreenState extends State<HelperBookingScreen>
     final startTime = job.scheduledStartTime!;
     final earliestStart = startTime.subtract(const Duration(minutes: 15));
 
-    // Kiểm tra: chưa tới giờ - 15 phút
     if (now.isBefore(earliestStart)) {
       final minutesLeft = earliestStart.difference(now).inMinutes;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -189,7 +224,6 @@ class _HelperBookingScreenState extends State<HelperBookingScreen>
       return;
     }
 
-    // Xác nhận
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -215,13 +249,13 @@ class _HelperBookingScreenState extends State<HelperBookingScreen>
     final success = await _bookingService.performBookingAction(
       token: widget.token!,
       bookingId: job.id!,
-      action: 4, // Bắt đầu
+      action: 4,
     );
 
     setState(() => _isLoading = false);
 
     if (success) {
-      await _loadBookings();
+      await _loadUpcomingBookings(); // Cập nhật lại
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Đã bắt đầu công việc!"),
@@ -245,7 +279,6 @@ class _HelperBookingScreenState extends State<HelperBookingScreen>
     final endTime = job.scheduledEndTime!;
     final earliestComplete = endTime.subtract(const Duration(minutes: 15));
 
-    // Kiểm tra: chưa tới giờ - 15 phút
     if (now.isBefore(earliestComplete)) {
       final minutesLeft = earliestComplete.difference(now).inMinutes;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -269,7 +302,6 @@ class _HelperBookingScreenState extends State<HelperBookingScreen>
       return;
     }
 
-    // Xác nhận
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -301,7 +333,8 @@ class _HelperBookingScreenState extends State<HelperBookingScreen>
     setState(() => _isLoading = false);
 
     if (success) {
-      await _loadBookings();
+      await _loadUpcomingBookings();
+      await _loadCompletedBookings(); // Cập nhật cả 2 tab
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Công việc đã hoàn thành!"),
@@ -339,17 +372,13 @@ class _HelperBookingScreenState extends State<HelperBookingScreen>
         helperId: job.helperId!,
       );
 
-      // Nếu đã có phòng → lấy tin nhắn để kiểm tra
       if (room != null) {
         final messages = await chatService.getMessages(
           roomId: room.id,
           page: 1,
           pageSize: 1,
         );
-        final hasMessages = messages.isNotEmpty;
-
-        // CHỈ GỬI CHÀO NẾU CHƯA CÓ TIN NHẮN
-        if (!hasMessages) {
+        if (messages.isEmpty) {
           await chatService.sendMessage(
             roomId: room.id,
             content: "Xin chào! Tôi là helper, đã nhận công việc của bạn.",
