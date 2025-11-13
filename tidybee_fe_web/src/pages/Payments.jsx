@@ -6,16 +6,11 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from "recharts";
 import { getMyTransactions } from "../services/payment";
-import axios from "axios";
-import { DollarSign, CreditCard, TrendingUp, RefreshCw, Loader2 } from "lucide-react";
-import toast from "react-hot-toast";
 
 export default function Payments() {
   const [transactions, setTransactions] = useState([]);
-  const [users, setUsers] = useState({});
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize] = useState(5);
@@ -23,84 +18,86 @@ export default function Payments() {
 
   const token = localStorage.getItem("token");
 
-  // 🔹 Lấy danh sách người dùng
-  const fetchUsers = async () => {
-    try {
-      const res = await axios.get(
-        "https://handbags-cst-isp-smooth.trycloudflare.com/api/Users?page=1&pageSize=100"
-      );
-      const map = {};
-      res.data?.data?.forEach((u) => {
-        map[String(u.id)] = u.fullName || u.userName || "Không rõ";
-      });
-      setUsers(map);
-    } catch (err) {
-      console.error("❌ Lỗi tải danh sách user:", err);
-    }
-  };
-
   // 🔹 Lấy danh sách giao dịch với phân trang
   const fetchTransactions = async (pageNum = 1) => {
     try {
       setLoading(true);
       const res = await getMyTransactions(token, pageNum, pageSize);
-      const { transactions: data = [], totalItems = data.length } = res;
+      console.log("API response:", res);
+
+      // Chọn đúng dữ liệu
+      const data = res.transactions || res.data || [];
+      const totalItems = res.totalItems ?? data.length;
+
       setTransactions(data);
       setPage(pageNum);
       setTotalPages(Math.ceil(totalItems / pageSize) || 1);
     } catch (err) {
       console.error("❌ Lỗi tải danh sách giao dịch:", err);
-      toast.error("Không thể tải danh sách giao dịch!");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchUsers().then(() => fetchTransactions(1));
+    fetchTransactions(1);
   }, []);
-
-  // 🔹 Helper lấy tên khách hàng
-  const getCustomerName = (customerId) => {
-    return (
-      users[String(customerId)] || `#${String(customerId)?.slice(0, 6)}...`
-    );
-  };
 
   // 🔹 Tính toán thống kê
   const stats = useMemo(
     () => ({
-      totalRevenue: transactions.reduce((s, t) => s + (t.amount || 0), 0),
+      totalRevenue: transactions.reduce(
+        (s, t) => s + (Number(t.amount) || 0),
+        0
+      ),
       totalPlatformFees: transactions.reduce(
-        (s, t) => s + (t.platformFee || 0),
+        (s, t) => s + (Number(t.platformFee) || 0),
         0
       ),
       totalHelperEarnings: transactions.reduce(
-        (s, t) => s + (t.helperAmount || 0),
+        (s, t) => s + (Number(t.helperAmount) || 0),
         0
       ),
-      totalRefunds: transactions.reduce((s, t) => s + (t.refundAmount || 0), 0),
+      totalRefunds: transactions.reduce(
+        (s, t) => s + (Number(t.refundAmount) || 0),
+        0
+      ),
     }),
     [transactions]
   );
 
-  // 🔹 Chuẩn hóa dữ liệu biểu đồ
+  // 🔹 Chuẩn hóa dữ liệu biểu đồ 7 ngày gần nhất
   const chartData = useMemo(() => {
-    const acc = [];
-    transactions.forEach((t) => {
-      const day = new Date(t.createdAt).toLocaleDateString("vi-VN", {
+    const today = new Date();
+
+    // 7 ngày gần nhất (cũ → mới)
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(today);
+      d.setDate(today.getDate() - (6 - i));
+      return d.toLocaleDateString("vi-VN", {
         day: "2-digit",
         month: "2-digit",
+        year: "numeric",
       });
-      const found = acc.find((a) => a.day === day);
-      if (found) found.revenue += t.amount || 0;
-      else acc.push({ day, revenue: t.amount || 0 });
     });
-    return acc.sort(
-      (a, b) =>
-        new Date(a.day.split("/").reverse().join("-")) -
-        new Date(b.day.split("/").reverse().join("-"))
-    );
+
+    const acc = last7Days.map((day) => ({ day, revenue: 0 }));
+
+    transactions.forEach((t) => {
+      const createdAt = new Date(t.createdAt);
+      if (isNaN(createdAt)) return; // bỏ qua ngày không hợp lệ
+
+      const day = createdAt.toLocaleDateString("vi-VN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+
+      const found = acc.find((a) => a.day === day);
+      if (found) found.revenue += Number(t.amount) || 0;
+    });
+
+    return acc;
   }, [transactions]);
 
   // 🔹 Hiển thị phương thức thanh toán
@@ -144,249 +141,175 @@ export default function Payments() {
     }
   };
 
-  const statCards = [
-    {
-      label: "Tổng doanh thu",
-      value: stats.totalRevenue,
-      icon: DollarSign,
-      color: "green",
-      bgColor: "bg-green-50",
-      textColor: "text-green-600",
-      iconColor: "text-green-500",
-    },
-    {
-      label: "Phí nền tảng",
-      value: stats.totalPlatformFees,
-      icon: CreditCard,
-      color: "red",
-      bgColor: "bg-red-50",
-      textColor: "text-red-600",
-      iconColor: "text-red-500",
-    },
-    {
-      label: "Thu nhập cộng tác viên",
-      value: stats.totalHelperEarnings,
-      icon: TrendingUp,
-      color: "blue",
-      bgColor: "bg-blue-50",
-      textColor: "text-blue-600",
-      iconColor: "text-blue-500",
-    },
-    {
-      label: "Hoàn tiền",
-      value: stats.totalRefunds,
-      icon: RefreshCw,
-      color: "orange",
-      bgColor: "bg-orange-50",
-      textColor: "text-orange-600",
-      iconColor: "text-orange-500",
-    },
-  ];
-
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Quản lý Thanh toán
-        </h1>
-        <p className="text-gray-600">
-          Xem và quản lý tất cả các giao dịch thanh toán trong hệ thống
-        </p>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-6 text-gray-800">
+        💰 Quản lý Thanh toán
+      </h1>
+
+      {/* Thống kê */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <Card label="Tổng doanh thu" value={stats.totalRevenue} color="green" />
+        <Card
+          label="Phí nền tảng"
+          value={stats.totalPlatformFees}
+          color="red"
+        />
+        <Card
+          label="Thu nhập cộng tác viên"
+          value={stats.totalHelperEarnings}
+          color="blue"
+        />
+        <Card label="Hoàn tiền" value={stats.totalRefunds} color="orange" />
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-        {statCards.map((stat, index) => {
-          const Icon = stat.icon;
-          return (
-            <div
-              key={index}
-              className="bg-white p-6 rounded-xl shadow-soft hover:shadow-medium transition-all duration-200 border border-gray-100"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className={`p-3 rounded-lg ${stat.bgColor}`}>
-                  <Icon className={`w-6 h-6 ${stat.iconColor}`} />
-                </div>
-              </div>
-              <h3 className="text-sm font-medium text-gray-600 mb-1">
-                {stat.label}
-              </h3>
-              <p className={`text-2xl font-bold ${stat.textColor}`}>
-                {stat.value.toLocaleString()} đ
-              </p>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Transactions Table */}
-      <div className="bg-white rounded-xl shadow-soft border border-gray-100 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+      {/* Bảng giao dịch */}
+      <div className="overflow-x-auto bg-white rounded-lg shadow mb-6">
+        <table className="min-w-full border-collapse">
+          <thead className="bg-green-100 text-gray-700 text-sm">
+            <tr>
+              <th className="p-3 text-left">#</th>
+              <th className="p-3 text-left">Mã đặt</th>
+              <th className="p-3 text-left">Khách hàng</th>
+              <th className="p-3 text-left">Người hỗ trợ</th>
+              <th className="p-3 text-left">Số tiền</th>
+              <th className="p-3 text-left">Trạng thái</th>
+              <th className="p-3 text-left">Ngày</th>
+              <th className="p-3 text-left">Phương thức</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
               <tr>
-                <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                  #
-                </th>
-                <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                  Mã đặt
-                </th>
-                <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                  Khách hàng
-                </th>
-                <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                  Số tiền
-                </th>
-                <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                  Trạng thái
-                </th>
-                <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                  Ngày
-                </th>
-                <th className="px-4 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                  Phương thức
-                </th>
+                <td colSpan={8} className="text-center p-4 italic">
+                  ⏳ Đang tải dữ liệu...
+                </td>
               </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {loading ? (
-                <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center">
-                    <Loader2 className="w-8 h-8 animate-spin text-primary-600 mx-auto mb-3" />
-                    <p className="text-gray-600 font-medium">Đang tải dữ liệu...</p>
+            ) : transactions.length ? (
+              transactions.map((t, i) => (
+                <tr
+                  key={t.id || i}
+                  className="border-t hover:bg-gray-50 transition text-sm"
+                >
+                  <td className="p-3 text-gray-600">
+                    {i + 1 + (page - 1) * pageSize}
                   </td>
-                </tr>
-              ) : transactions.length ? (
-                transactions.map((t, i) => {
-                  const statusInfo = getStatusInfo(t.status);
-                  return (
-                    <tr
-                      key={t.id}
-                      className="hover:bg-gray-50 transition-colors"
+                  <td className="p-3">{t.bookingRequestId || "--"}</td>
+                  <td className="p-3 font-medium text-gray-900">
+                    {t.customerName ??
+                      (t.customerId ? `#${t.customerId.slice(0, 6)}...` : "--")}
+                  </td>
+                  <td className="p-3 text-gray-900">
+                    {t.helperName ??
+                      (t.helperId ? `#${t.helperId.slice(0, 6)}...` : "--")}
+                  </td>
+                  <td className="p-3 text-green-700 font-semibold">
+                    {(Number(t.amount) || 0).toLocaleString()} đ
+                  </td>
+                  <td className="p-3">
+                    {(() => {
+                      const { label, color } = getStatusInfo(t.status);
+                      return (
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-semibold ${color}`}
+                        >
+                          {label}
+                        </span>
+                      );
+                    })()}
+                  </td>
+                  <td className="p-3 text-gray-500">
+                    {t.createdAt
+                      ? new Date(t.createdAt).toLocaleDateString("vi-VN")
+                      : "--"}
+                  </td>
+                  <td className="p-3">
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        t.paymentMethod === 1
+                          ? "bg-yellow-100 text-yellow-700"
+                          : t.paymentMethod === 4
+                          ? "bg-blue-100 text-blue-700"
+                          : "bg-gray-100 text-gray-700"
+                      }`}
                     >
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {i + 1 + (page - 1) * pageSize}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {t.bookingRequestId || "--"}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {getCustomerName(t.customerId)}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-green-600 flex items-center gap-1">
-                        <DollarSign className="w-4 h-4" />
-                        {(t.amount || 0).toLocaleString()} đ
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <span
-                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${statusInfo.color}`}
-                        >
-                          {statusInfo.label}
-                        </span>
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(t.createdAt).toLocaleDateString("vi-VN")}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <span
-                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                            t.paymentMethod === 1
-                              ? "bg-yellow-100 text-yellow-700"
-                              : t.paymentMethod === 4
-                              ? "bg-blue-100 text-blue-700"
-                              : "bg-gray-100 text-gray-700"
-                          }`}
-                        >
-                          {getPaymentMethodLabel(t.paymentMethod)}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })
-              ) : (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="px-4 py-12 text-center text-gray-500"
-                  >
-                    <CreditCard className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                    <p className="font-medium">Không có dữ liệu giao dịch</p>
+                      {getPaymentMethodLabel(t.paymentMethod)}
+                    </span>
                   </td>
                 </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan={8}
+                  className="text-center p-4 italic text-gray-500"
+                >
+                  Không có dữ liệu giao dịch
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
 
-      {/* Pagination */}
+      {/* Phân trang */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-3">
+        <div className="flex justify-center gap-3 mb-6">
           <button
             disabled={page <= 1}
             onClick={() => fetchTransactions(page - 1)}
-            className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-            aria-label="Previous page"
+            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
           >
             ← Trước
           </button>
-          <span className="px-4 py-2 text-sm text-gray-700 font-medium">
+          <span className="text-gray-700">
             Trang {page}/{totalPages}
           </span>
           <button
             disabled={page >= totalPages}
             onClick={() => fetchTransactions(page + 1)}
-            className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-            aria-label="Next page"
+            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
           >
             Sau →
           </button>
         </div>
       )}
 
-      {/* Revenue Chart */}
-      <div className="bg-white p-6 rounded-xl shadow-soft border border-gray-100">
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-1">
-            Biểu đồ doanh thu theo ngày
-          </h2>
-          <p className="text-sm text-gray-600">
-            Biểu đồ thể hiện doanh thu trong các ngày gần đây
-          </p>
-        </div>
+      {/* Biểu đồ doanh thu */}
+      <section className="bg-white p-6 rounded-2xl shadow">
+        <h2 className="text-xl font-semibold mb-4 text-gray-700">
+          Biểu đồ doanh thu 7 ngày gần nhất
+        </h2>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData}>
-              <XAxis
-                dataKey="day"
-                stroke="#6b7280"
-                fontSize={12}
-                tickLine={false}
-              />
-              <YAxis
-                stroke="#6b7280"
-                fontSize={12}
-                tickLine={false}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "white",
-                  border: "1px solid #e5e7eb",
-                  borderRadius: "8px",
-                  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                }}
-              />
-              <Legend />
-              <Bar
-                dataKey="revenue"
-                fill="#22c55e"
-                radius={[8, 8, 0, 0]}
-              />
+              <XAxis dataKey="day" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="revenue" fill="#22c55e" />
             </BarChart>
           </ResponsiveContainer>
         </div>
-      </div>
+      </section>
+    </div>
+  );
+}
+
+// 🧩 Component Card tái sử dụng
+function Card({ label, value, color }) {
+  const colorMap = {
+    green: "text-green-600",
+    red: "text-red-600",
+    blue: "text-blue-600",
+    orange: "text-orange-600",
+  };
+
+  return (
+    <div className="bg-white p-4 rounded-xl shadow text-center">
+      <p className="text-gray-500">{label}</p>
+      <p className={`text-xl font-bold ${colorMap[color] || "text-gray-600"}`}>
+        {(Number(value) || 0).toLocaleString()} đ
+      </p>
     </div>
   );
 }
