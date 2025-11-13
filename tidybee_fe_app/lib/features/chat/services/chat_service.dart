@@ -4,8 +4,7 @@ import 'package:tidybee_fe_app/features/chat/model/chat_room.dart';
 import 'package:tidybee_fe_app/features/chat/model/chat_message.dart';
 
 class ChatService {
-  final String baseUrl =
-      'https://calcium-operated-gate-premium.trycloudflare.com';
+  final String baseUrl = 'http://15.134.86.67:8080';
   final String token;
   final String currentUserId;
 

@@ -30,13 +30,9 @@ class Booking {
       helperId: json['helperId']?.toString(),
       proposedPrice: _parseInt(json['proposedPrice']),
       message: json['message']?.toString(),
-      responseDate: json['responseDate'] != null
-          ? DateTime.tryParse(json['responseDate'].toString())
-          : null,
+      responseDate: _parseDbDate(json['responseDate']),
       isAccepted: json['isAccepted'] as bool? ?? false,
-      createdAt: json['createdAt'] != null
-          ? DateTime.tryParse(json['createdAt'].toString())
-          : null,
+      createdAt: _parseDbDate(json['createdAt']),
       helperInfo: json['helperInfo'] != null
           ? Helper.fromJson({'data': json['helperInfo']})
           : null,
@@ -50,11 +46,32 @@ class Booking {
       "helperId": helperId,
       "proposedPrice": proposedPrice,
       "message": message,
-      "responseDate": responseDate?.toIso8601String(),
+      // Giữ nguyên giờ như DB, không tự convert timezone
+      "responseDate": responseDate?.toIso8601String().replaceAll('Z', ''),
       "isAccepted": isAccepted,
-      "createdAt": createdAt?.toIso8601String(),
+      "createdAt": createdAt?.toIso8601String().replaceAll('Z', ''),
       if (helperInfo != null) "helperInfo": helperInfo!.toJson(),
     };
+  }
+
+  /// 🔹 Hàm parse thủ công, loại bỏ ký tự 'Z' để giữ nguyên giờ từ database
+  static DateTime? _parseDbDate(dynamic value) {
+    if (value == null) return null;
+    try {
+      String raw = value.toString();
+      if (raw.endsWith('Z')) raw = raw.replaceAll('Z', '');
+      final parsed = DateTime.parse(raw);
+      return DateTime(
+        parsed.year,
+        parsed.month,
+        parsed.day,
+        parsed.hour,
+        parsed.minute,
+        parsed.second,
+      );
+    } catch (e) {
+      return null;
+    }
   }
 
   static int? _parseInt(dynamic value) {
@@ -84,7 +101,7 @@ extension HelperJson on Helper {
       "workingDays": workingDays,
       "backgroundChecked": backgroundChecked,
       "documents": documents,
-      "createdAt": createdAt?.toIso8601String(),
+      "createdAt": createdAt?.toIso8601String().replaceAll('Z', ''),
       "helperName": helperName,
       "helperAvatar": helperAvatar,
     };
