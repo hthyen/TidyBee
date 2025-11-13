@@ -6,12 +6,11 @@ import 'package:tidybee_fe_app/core/common_widgets/error_messages.dart';
 import 'package:tidybee_fe_app/features/auth/model/user.dart';
 
 class UserServices {
-  final String loginUrl = dotenv.env['API_LOGIN'] ?? '';
-  final String registerUrl = dotenv.env['API_REGISTER'] ?? '';
+  final String baseUrl = dotenv.env['API_AUTH'] ?? '';
 
   // Future - asynchronous login
   Future<User?> login(String email, String password) async {
-    final url = Uri.parse('$loginUrl');
+    final url = Uri.parse('$baseUrl/login');
 
     final response = await http.post(
       url,
@@ -54,7 +53,7 @@ class UserServices {
 
   // Future - asynchronous register
   Future<User?> register(Map<String, dynamic> newUser) async {
-    final url = Uri.parse('$registerUrl');
+    final url = Uri.parse('$baseUrl/register');
 
     final response = await http.post(
       url,

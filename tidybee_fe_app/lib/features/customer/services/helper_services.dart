@@ -4,8 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:tidybee_fe_app/features/customer/model/helper.dart';
 
 class HelperServices {
-  final String getEligibleHelpersForBooking =
-      dotenv.env['API_GET_HEPER_FOR_BOOKING'] ?? '';
+  final String baseUrl = dotenv.env['API_BOOKING'] ?? '';
 
   // Future - asynchronous get eligible helpers
   Future<List<Helper>> getEligibleHelpers(
@@ -14,9 +13,7 @@ class HelperServices {
   ) async {
     try {
       final response = await http.get(
-        Uri.parse(
-          '$getEligibleHelpersForBooking/$bookingId/eligible-helpers?limit=50',
-        ),
+        Uri.parse('$baseUrl/$bookingId/eligible-helpers?limit=50'),
         headers: {
           "Authorization": "Bearer $token",
           "Content-Type": "application/json",
