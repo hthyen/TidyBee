@@ -47,7 +47,7 @@ class BookingRequest {
     this.updatedAt,
   });
 
-  // GETTER: Dùng cho UI (locationAddress, scheduledDate, estimatedDuration)
+  // ---------------- GETTERS cho UI ----------------
   String? get locationAddress => serviceLocation?.address;
 
   DateTime? get scheduledDate => scheduledStartTime;
@@ -59,7 +59,6 @@ class BookingRequest {
 
   int? get budget => estimatedPrice;
 
-  // GETTER: Trạng thái tiếng Việt
   String get statusText {
     switch (status) {
       case 1:
@@ -79,7 +78,6 @@ class BookingRequest {
     }
   }
 
-  // GETTER: Màu trạng thái
   Color get statusColor {
     switch (status) {
       case 3:
@@ -95,7 +93,10 @@ class BookingRequest {
     }
   }
 
+  // ---------------- FROM JSON ----------------
   factory BookingRequest.fromJson(Map<String, dynamic> json) {
+    print('📥 [BookingRequest] Raw JSON: $json');
+
     return BookingRequest(
       id: json['id']?.toString(),
       customerId: json['customerId']?.toString(),
@@ -107,8 +108,8 @@ class BookingRequest {
       serviceLocation: json['serviceLocation'] != null
           ? ServiceLocation.fromJson(json['serviceLocation'])
           : null,
-      scheduledStartTime: _parseDate(json['scheduledStartTime']),
-      scheduledEndTime: _parseDate(json['scheduledEndTime']),
+      scheduledStartTime: _parseDbDate(json['scheduledStartTime']),
+      scheduledEndTime: _parseDbDate(json['scheduledEndTime']),
       estimatedPrice: _parseInt(json['estimatedPrice']),
       finalPrice: _parseInt(json['finalPrice']),
       status: _parseInt(json['status']),
@@ -116,35 +117,20 @@ class BookingRequest {
       helperNotes: json['helperNotes']?.toString(),
       isRecurring: json['isRecurring'] as bool?,
       recurringPattern: json['recurringPattern']?.toString(),
-      recurringEndDate: _parseDate(json['recurringEndDate']),
+      recurringEndDate: _parseDbDate(json['recurringEndDate']),
       selectedHelperIds:
           (json['selectedHelperIds'] as List?)
               ?.map((e) => e.toString())
               .toList() ??
           [],
-      createdAt: _parseDate(json['createdAt']),
-      updatedAt: _parseDate(json['updatedAt']),
+      createdAt: _parseDbDate(json['createdAt']),
+      updatedAt: _parseDbDate(json['updatedAt']),
     );
   }
 
-  static int? _parseInt(dynamic v) {
-    if (v == null) return null;
-    if (v is num) return v.toInt();
-    if (v is String) return int.tryParse(v);
-    return null;
-  }
-
-  static DateTime? _parseDate(dynamic v) {
-    if (v == null) return null;
-    try {
-      return DateTime.parse(v.toString()).toLocal();
-    } catch (e) {
-      return null;
-    }
-  }
-
+  // ---------------- TO JSON ----------------
   Map<String, dynamic> toJson() {
-    return {
+    final data = {
       "id": id,
       "customerId": customerId,
       "helperId": helperId,
@@ -167,9 +153,38 @@ class BookingRequest {
       "createdAt": createdAt?.toIso8601String(),
       "updatedAt": updatedAt?.toIso8601String(),
     };
+
+    print('📤 [BookingRequest] toJson: $data');
+    return data;
+  }
+
+  // ---------------- UTILITIES ----------------
+  static int? _parseInt(dynamic v) {
+    if (v == null) return null;
+    if (v is num) return v.toInt();
+    if (v is String) return int.tryParse(v);
+    return null;
+  }
+
+  static DateTime? _parseDbDate(dynamic v) {
+    if (v == null) return null;
+
+    try {
+      final raw = v.toString();
+      print('⏱️ Raw DB datetime: $raw');
+      final clean = raw.replaceAll('Z', '');
+      final parsed = DateTime.parse(clean);
+
+      print('✅ Parsed (giữ nguyên DB): $parsed');
+      return parsed;
+    } catch (e) {
+      print('❌ Lỗi parse datetime: $e | raw: $v');
+      return null;
+    }
   }
 }
 
+// ---------------- ServiceLocation ----------------
 class ServiceLocation {
   final double? latitude;
   final double? longitude;

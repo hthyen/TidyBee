@@ -6,6 +6,7 @@ import 'package:tidybee_fe_app/features/helper/model/booking_request.dart';
 class BookingService {
   final String bookingAssignedUrl = dotenv.env['API_ASSIGNED_BOOKING'] ?? '';
   final String bookingRequestUrl = dotenv.env['API_REQUEST_BOOKING'] ?? '';
+  final String bookingUrl = dotenv.env['API_BOOKING'] ?? '';
 
   Future<List<BookingRequest>> getAvailableBookingsForHelper({
     required String token,
@@ -35,6 +36,42 @@ class BookingService {
       }
     } catch (e) {
       print('Exception khi lấy việc mới: $e');
+      return [];
+    }
+  }
+
+  Future<List<BookingRequest>> getCompletedBookings({
+    required String token,
+    int page = 1,
+    int pageSize = 10,
+  }) async {
+    try {
+      final url = Uri.parse(
+        '$bookingUrl/my-bookings?status=5&page=$page&pageSize=$pageSize',
+      );
+
+      final response = await http.get(
+        url,
+        headers: {'accept': '*/*', 'Authorization': 'Bearer $token'},
+      );
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(utf8.decode(response.bodyBytes));
+        final list = decoded['data'] as List?;
+        if (list == null) return [];
+
+        final bookings = list
+            .map((e) => BookingRequest.fromJson(e as Map<String, dynamic>))
+            .toList();
+        print('Lấy ${bookings.length} công việc HOÀN THÀNH');
+        return bookings;
+      } else {
+        print('Lỗi API completed: ${response.statusCode}');
+        print('Body: ${response.body}');
+        return [];
+      }
+    } catch (e) {
+      print('Exception khi lấy công việc hoàn thành: $e');
       return [];
     }
   }

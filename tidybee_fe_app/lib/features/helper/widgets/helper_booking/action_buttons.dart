@@ -63,7 +63,7 @@ class ActionButtons extends StatelessWidget {
                 style: const TextStyle(fontSize: 14),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: canChat ? Colors.purple : Colors.grey,
+                backgroundColor: canChat ? Colors.white : Colors.grey,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 8,

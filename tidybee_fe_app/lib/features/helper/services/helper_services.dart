@@ -2,9 +2,12 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:tidybee_fe_app/features/helper/model/helper.dart';
+import 'package:tidybee_fe_app/features/helper/model/helper_profile_summary_model.dart';
 
 class HelperServices {
   final String baseUrl = dotenv.env['API_HELPER'] ?? '';
+  final String helperProfileSummaryUrl =
+      dotenv.env['API_HELPER_PROFILE_SUMMARY'] ?? '';
 
   // Retrieve helper information by userId
   Future<Helper?> getHelper(String token, String userId) async {
@@ -58,6 +61,35 @@ class HelperServices {
       }
     } catch (e) {
       return false;
+    }
+  }
+
+  Future<HelperProfileSummaryModel?> getHelperProfileSummary(
+    String token,
+    String userId,
+  ) async {
+    try {
+      final url = Uri.parse('$helperProfileSummaryUrl/$userId/dashboard');
+      final response = await http.get(
+        url,
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
+        return HelperProfileSummaryModel.fromJson(data);
+      } else {
+        print('Lỗi lấy profile summary: ${response.statusCode}');
+        print('Body: ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('Exception: $e');
+      return null;
     }
   }
 }

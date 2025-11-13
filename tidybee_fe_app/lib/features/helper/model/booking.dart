@@ -30,15 +30,11 @@ class Booking {
       helperId: json['helperId']?.toString(),
       proposedPrice: _parseInt(json['proposedPrice']),
       message: json['message']?.toString(),
-      responseDate: json['responseDate'] != null
-          ? DateTime.tryParse(json['responseDate'].toString())
-          : null,
+      responseDate: _parseExactDate(json['responseDate']),
       isAccepted: json['isAccepted'] as bool? ?? false,
-      createdAt: json['createdAt'] != null
-          ? DateTime.tryParse(json['createdAt'].toString())
-          : null,
+      createdAt: _parseExactDate(json['createdAt']),
       helperInfo: json['helperInfo'] != null
-          ? Helper.fromJson({'data': json['helperInfo']})
+          ? Helper.fromJson(json['helperInfo'])
           : null,
     );
   }
@@ -50,11 +46,44 @@ class Booking {
       "helperId": helperId,
       "proposedPrice": proposedPrice,
       "message": message,
-      "responseDate": responseDate?.toIso8601String(),
+      "responseDate": responseDate != null ? _formatDate(responseDate!) : null,
       "isAccepted": isAccepted,
-      "createdAt": createdAt?.toIso8601String(),
+      "createdAt": createdAt != null ? _formatDate(createdAt!) : null,
       if (helperInfo != null) "helperInfo": helperInfo!.toJson(),
     };
+  }
+
+  static DateTime? _parseExactDate(dynamic value) {
+    if (value == null) return null;
+    try {
+      String raw = value.toString().replaceAll('Z', '');
+
+      final parts = raw.split('T');
+      final dateParts = parts[0].split('-');
+      final timeParts = parts.length > 1
+          ? parts[1].split(':')
+          : ['0', '0', '0'];
+
+      return DateTime(
+        int.parse(dateParts[0]),
+        int.parse(dateParts[1]),
+        int.parse(dateParts[2]),
+        int.parse(timeParts[0]),
+        int.parse(timeParts[1]),
+        int.parse(timeParts[2].split('.')[0]),
+      );
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static String _formatDate(DateTime date) {
+    return "${date.year.toString().padLeft(4, '0')}-"
+        "${date.month.toString().padLeft(2, '0')}-"
+        "${date.day.toString().padLeft(2, '0')}T"
+        "${date.hour.toString().padLeft(2, '0')}:"
+        "${date.minute.toString().padLeft(2, '0')}:"
+        "${date.second.toString().padLeft(2, '0')}";
   }
 
   static int? _parseInt(dynamic value) {
@@ -84,7 +113,7 @@ extension HelperJson on Helper {
       "workingDays": workingDays,
       "backgroundChecked": backgroundChecked,
       "documents": documents,
-      "createdAt": createdAt?.toIso8601String(),
+      "createdAt": createdAt != null ? Booking._formatDate(createdAt!) : null,
       "helperName": helperName,
       "helperAvatar": helperAvatar,
     };
