@@ -16,6 +16,9 @@ export default function Payments() {
   const [pageSize] = useState(5);
   const [totalPages, setTotalPages] = useState(1);
 
+  // 🔹 NEW: state cho modal chi tiết
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+
   const token = localStorage.getItem("token");
 
   // 🔹 Lấy danh sách giao dịch với phân trang
@@ -25,7 +28,6 @@ export default function Payments() {
       const res = await getMyTransactions(token, pageNum, pageSize);
       console.log("API response:", res);
 
-      // Chọn đúng dữ liệu
       const data = res.transactions || res.data || [];
       const totalItems = res.totalItems ?? data.length;
 
@@ -69,8 +71,6 @@ export default function Payments() {
   // 🔹 Chuẩn hóa dữ liệu biểu đồ 7 ngày gần nhất
   const chartData = useMemo(() => {
     const today = new Date();
-
-    // 7 ngày gần nhất (cũ → mới)
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const d = new Date(today);
       d.setDate(today.getDate() - (6 - i));
@@ -82,17 +82,14 @@ export default function Payments() {
     });
 
     const acc = last7Days.map((day) => ({ day, revenue: 0 }));
-
     transactions.forEach((t) => {
       const createdAt = new Date(t.createdAt);
-      if (isNaN(createdAt)) return; // bỏ qua ngày không hợp lệ
-
+      if (isNaN(createdAt)) return;
       const day = createdAt.toLocaleDateString("vi-VN", {
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
       });
-
       const found = acc.find((a) => a.day === day);
       if (found) found.revenue += Number(t.amount) || 0;
     });
@@ -144,7 +141,7 @@ export default function Payments() {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6 text-gray-800">
-        💰 Quản lý Thanh toán
+        Quản lý Thanh toán
       </h1>
 
       {/* Thống kê */}
@@ -156,7 +153,7 @@ export default function Payments() {
           color="red"
         />
         <Card
-          label="Thu nhập cộng tác viên"
+          label="Tổng thu nhập helper"
           value={stats.totalHelperEarnings}
           color="blue"
         />
@@ -171,7 +168,7 @@ export default function Payments() {
               <th className="p-3 text-left">#</th>
               <th className="p-3 text-left">Mã đặt</th>
               <th className="p-3 text-left">Khách hàng</th>
-              <th className="p-3 text-left">Người hỗ trợ</th>
+              {/* <th className="p-3 text-left">Người hỗ trợ</th> */}
               <th className="p-3 text-left">Số tiền</th>
               <th className="p-3 text-left">Trạng thái</th>
               <th className="p-3 text-left">Ngày</th>
@@ -189,7 +186,8 @@ export default function Payments() {
               transactions.map((t, i) => (
                 <tr
                   key={t.id || i}
-                  className="border-t hover:bg-gray-50 transition text-sm"
+                  className="border-t hover:bg-gray-50 transition text-sm cursor-pointer"
+                  onClick={() => setSelectedTransaction(t)} // 🔹 Khi click -> mở modal chi tiết
                 >
                   <td className="p-3 text-gray-600">
                     {i + 1 + (page - 1) * pageSize}
@@ -199,10 +197,10 @@ export default function Payments() {
                     {t.customerName ??
                       (t.customerId ? `#${t.customerId.slice(0, 6)}...` : "--")}
                   </td>
-                  <td className="p-3 text-gray-900">
+                  {/* <td className="p-3 text-gray-900">
                     {t.helperName ??
                       (t.helperId ? `#${t.helperId.slice(0, 6)}...` : "--")}
-                  </td>
+                  </td> */}
                   <td className="p-3 text-green-700 font-semibold">
                     {(Number(t.amount) || 0).toLocaleString()} đ
                   </td>
@@ -291,6 +289,78 @@ export default function Payments() {
           </ResponsiveContainer>
         </div>
       </section>
+
+      {/* 🔹 Modal hiển thị chi tiết giao dịch */}
+      {selectedTransaction && (
+        <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative">
+            <button
+              className="absolute top-2 right-3 text-gray-500 hover:text-gray-700 text-lg"
+              onClick={() => setSelectedTransaction(null)}
+            >
+              ✕
+            </button>
+            <h3 className="text-xl font-semibold mb-4 text-gray-800">
+              Chi tiết giao dịch
+            </h3>
+
+            <div className="space-y-2 text-sm text-gray-700">
+              <p>
+                <strong>Mã giao dịch:</strong>{" "}
+                {selectedTransaction.transactionId}
+              </p>
+              <p>
+                <strong>Mã đặt:</strong> {selectedTransaction.bookingRequestId}
+              </p>
+              <p>
+                <strong>Khách hàng:</strong>{" "}
+                {selectedTransaction.customerName ??
+                  selectedTransaction.customerId}
+              </p>
+              <p>
+                <strong>Người hỗ trợ:</strong>{" "}
+                {selectedTransaction.helperName ?? selectedTransaction.helperId}
+              </p>
+              <p>
+                <strong>Số tiền:</strong>{" "}
+                {(Number(selectedTransaction.amount) || 0).toLocaleString()} đ
+              </p>
+              <p>
+                <strong>Phí nền tảng:</strong>{" "}
+                {(
+                  Number(selectedTransaction.platformFee) || 0
+                ).toLocaleString()}{" "}
+                đ
+              </p>
+              <p>
+                <strong>Thu nhập CTV:</strong>{" "}
+                {(
+                  Number(selectedTransaction.helperAmount) || 0
+                ).toLocaleString()}{" "}
+                đ
+              </p>
+              <p>
+                <strong>Trạng thái:</strong>{" "}
+                {getStatusInfo(selectedTransaction.status).label}
+              </p>
+              <p>
+                <strong>Phương thức:</strong>{" "}
+                {getPaymentMethodLabel(selectedTransaction.paymentMethod)}
+              </p>
+              <p>
+                <strong>Mô tả:</strong>{" "}
+                {selectedTransaction.description || "Không có"}
+              </p>
+              <p>
+                <strong>Ngày tạo:</strong>{" "}
+                {new Date(selectedTransaction.createdAt).toLocaleString(
+                  "vi-VN"
+                )}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

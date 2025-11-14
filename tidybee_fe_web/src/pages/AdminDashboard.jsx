@@ -11,45 +11,60 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import {
-  Users,
-  Calendar,
-  CheckCircle,
-  DollarSign,
-  TrendingUp,
-} from "lucide-react";
+import { Calendar, CheckCircle, DollarSign, TrendingUp } from "lucide-react";
 
 export default function AdminDashboard() {
   const [bookingData, setBookingData] = useState(null);
+  const [paymentData, setPaymentData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const COLORS = ["#22c55e", "#3b82f6", "#f59e0b", "#ef4444"];
+
+  // Hàm format tiền VND
+  const formatVND = (value) => {
+    if (!value) return "0₫";
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(value);
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) window.location.href = "/";
 
-    async function fetchBookings() {
+    async function fetchData() {
       try {
-        const res = await fetch("YOUR_API_ENDPOINT_HERE", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
-        setBookingData(data.data);
+        // Fetch booking statistics
+        const resBookings = await fetch(
+          "http://3.25.153.5:8080/api/Bookings/admin/statistics",
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const dataBookings = await resBookings.json();
+        setBookingData(dataBookings.data);
+
+        // Fetch payment statistics
+        const resPayments = await fetch(
+          "http://16.176.128.132:8080/api/payments/statistics",
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const dataPayments = await resPayments.json();
+        setPaymentData(dataPayments.data);
+
         setLoading(false);
       } catch (err) {
-        console.error("Error fetching bookings:", err);
+        console.error("Error fetching data:", err);
         setLoading(false);
       }
     }
 
-    fetchBookings();
+    fetchData();
   }, []);
 
   if (loading) return <p className="text-center mt-10">Loading...</p>;
 
-  // Stats cards
-  const stats = [
+  // Booking Stats Cards
+  const bookingStats = [
     {
       label: "Tổng số đơn đặt chỗ",
       value: bookingData?.overview.totalBookings ?? 0,
@@ -76,7 +91,7 @@ export default function AdminDashboard() {
     },
     {
       label: "Doanh thu ước tính",
-      value: `$${bookingData?.revenue.estimatedPipelineValue ?? 0}`,
+      value: formatVND(bookingData?.revenue.estimatedPipelineValue ?? 0),
       icon: DollarSign,
       bgColor: "bg-emerald-50",
       textColor: "text-emerald-600",
@@ -84,7 +99,43 @@ export default function AdminDashboard() {
     },
   ];
 
-  // Pie chart: trạng thái booking
+  // Payment Stats Cards
+  const paymentStats = [
+    {
+      label: "Tổng doanh thu",
+      value: formatVND(paymentData?.totalRevenue ?? 0),
+      icon: DollarSign,
+      bgColor: "bg-blue-50",
+      textColor: "text-blue-600",
+      iconColor: "text-blue-500",
+    },
+    {
+      label: "Tổng phí nền tảng",
+      value: formatVND(paymentData?.totalPlatformFees ?? 0),
+      icon: DollarSign,
+      bgColor: "bg-indigo-50",
+      textColor: "text-indigo-600",
+      iconColor: "text-indigo-500",
+    },
+    {
+      label: "Tổng thu nhập helper",
+      value: formatVND(paymentData?.totalHelperEarnings ?? 0),
+      icon: DollarSign,
+      bgColor: "bg-green-50",
+      textColor: "text-green-600",
+      iconColor: "text-green-500",
+    },
+    {
+      label: "Tổng giao dịch thành công",
+      value: paymentData?.successfulTransactions ?? 0,
+      icon: CheckCircle,
+      bgColor: "bg-yellow-50",
+      textColor: "text-yellow-600",
+      iconColor: "text-yellow-500",
+    },
+  ];
+
+  // Pie chart for booking status
   const orderStatusData = [
     { name: "Completed", value: bookingData?.overview.completedBookings ?? 0 },
     { name: "Active", value: bookingData?.overview.activeBookings ?? 0 },
@@ -92,7 +143,7 @@ export default function AdminDashboard() {
     { name: "Canceled", value: bookingData?.overview.cancelledBookings ?? 0 },
   ];
 
-  // Bar chart: doanh thu theo tháng
+  // Bar chart: revenue by month (booking)
   const revenueData =
     bookingData?.monthlyTrends.map((item) => ({
       day: item.month,
@@ -107,13 +158,39 @@ export default function AdminDashboard() {
           Tổng quan hệ thống
         </h1>
         <p className="text-gray-600">
-          Xem tổng quan về hoạt động và hiệu suất của hệ thống
+          Xem tổng quan về hoạt động, thanh toán và hiệu suất của hệ thống
         </p>
       </div>
 
-      {/* Stats Cards */}
+      {/* Booking Stats Cards */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-        {stats.map((stat, index) => {
+        {bookingStats.map((stat, index) => {
+          const Icon = stat.icon;
+          return (
+            <div
+              key={index}
+              className="bg-white p-6 rounded-xl shadow-soft hover:shadow-medium transition-all duration-200 border border-gray-100"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className={`p-3 rounded-lg ${stat.bgColor}`}>
+                  <Icon className={`w-6 h-6 ${stat.iconColor}`} />
+                </div>
+                <TrendingUp className="w-5 h-5 text-gray-400" />
+              </div>
+              <h3 className="text-sm font-medium text-gray-600 mb-1">
+                {stat.label}
+              </h3>
+              <p className={`text-2xl font-bold ${stat.textColor}`}>
+                {stat.value}
+              </p>
+            </div>
+          );
+        })}
+      </section>
+
+      {/* Payment Stats Cards */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+        {paymentStats.map((stat, index) => {
           const Icon = stat.icon;
           return (
             <div
@@ -158,8 +235,14 @@ export default function AdminDashboard() {
                   fontSize={12}
                   tickLine={false}
                 />
-                <YAxis stroke="#6b7280" fontSize={12} tickLine={false} />
+                <YAxis
+                  stroke="#6b7280"
+                  fontSize={12}
+                  tickLine={false}
+                  tickFormatter={(value) => formatVND(value)}
+                />
                 <Tooltip
+                  formatter={(value) => formatVND(value)}
                   contentStyle={{
                     backgroundColor: "white",
                     border: "1px solid #e5e7eb",

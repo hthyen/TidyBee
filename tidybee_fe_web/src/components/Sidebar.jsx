@@ -17,7 +17,7 @@ export default function Sidebar({ isOpen, onClose }) {
     { path: "/admin/users", label: "Users", icon: Users },
     { path: "/admin/booking", label: "Booking", icon: Calendar },
     { path: "/admin/payments", label: "Payments", icon: CreditCard },
-    { path: "/admin/reviews", label: "Reviews", icon: Star },
+    // { path: "/admin/reviews", label: "Reviews", icon: Star },
   ];
 
   const isActive = (path) => {
