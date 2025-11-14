@@ -1,17 +1,15 @@
+// features/helper/widgets/helper_home/quick_stats_row.dart
 import 'package:flutter/material.dart';
-import 'package:tidybee_fe_app/core/theme/app_colors.dart';
 
 class QuickStatsRow extends StatelessWidget {
   final int completedJobs;
   final double rating;
-  final int reviewCount; // THÊM
   final int pendingJobs;
 
   const QuickStatsRow({
     super.key,
     required this.completedJobs,
     required this.rating,
-    required this.reviewCount, // THÊM
     required this.pendingJobs,
   });
 
@@ -19,23 +17,19 @@ class QuickStatsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        _buildStat("Hoàn thành", completedJobs.toString(), Icons.check_circle),
+        _statItem(Icons.check_circle, "$completedJobs", "Hoàn thành"),
         const SizedBox(width: 12),
-        _buildStat(
-          "Đánh giá",
-          "${rating.toStringAsFixed(1)} ($reviewCount)",
-          Icons.star,
-        ),
+        _statItem(Icons.star, rating.toStringAsFixed(1), "Đánh giá"),
         const SizedBox(width: 12),
-        _buildStat("Đang chờ", pendingJobs.toString(), Icons.schedule),
+        _statItem(Icons.schedule, "$pendingJobs", "Đang chờ"),
       ],
     );
   }
 
-  Widget _buildStat(String label, String value, IconData icon) {
+  Widget _statItem(IconData icon, String value, String label) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
@@ -45,15 +39,15 @@ class QuickStatsRow extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Icon(icon, color: AppColors.primary, size: 24),
-            const SizedBox(height: 6),
+            Icon(icon, color: Colors.orange, size: 28),
+            const SizedBox(height: 8),
             Text(
               value,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             Text(
               label,
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
           ],
         ),

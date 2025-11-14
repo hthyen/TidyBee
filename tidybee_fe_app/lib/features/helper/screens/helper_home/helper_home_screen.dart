@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tidybee_fe_app/core/theme/app_colors.dart';
-import 'package:tidybee_fe_app/core/common_services/utils_method.dart';
+// import 'package:tidybee_fe_app/core/common_services/format_money.dart';
 import 'package:tidybee_fe_app/features/helper/model/helper.dart';
 import 'package:tidybee_fe_app/features/helper/services/helper_services.dart';
 import 'package:tidybee_fe_app/features/helper/services/earnings_service.dart';
@@ -9,7 +9,7 @@ import 'package:tidybee_fe_app/features/helper/model/earnings/earnings_statistic
 import 'package:tidybee_fe_app/features/helper/widgets/helper_home/incomplete_profile_box.dart';
 import 'package:tidybee_fe_app/features/helper/widgets/helper_home/quick_stats_row.dart';
 import 'package:tidybee_fe_app/features/helper/widgets/helper_home/upcoming_job_card.dart';
-import 'package:tidybee_fe_app/features/helper/model/helper_profile_summary_model.dart';
+import 'package:tidybee_fe_app/core/common_services/utils_method.dart';
 
 class HelperHomeScreen extends StatefulWidget {
   final String token;
@@ -25,7 +25,6 @@ class _HelperHomeScreenState extends State<HelperHomeScreen> {
 
   Helper? _helper;
   EarningsStatisticsModel? _earnings;
-  HelperProfileSummaryModel? _profileSummary;
   bool _isLoading = true;
   bool _isWithdrawing = false;
 
@@ -49,33 +48,19 @@ class _HelperHomeScreenState extends State<HelperHomeScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final userId = prefs.getString('id');
-      if (userId == null) {
-        if (mounted) setState(() => _isLoading = false);
-        return;
-      }
-
-      // GỌI 3 API SONG SONG
-      final helper = await _helperService.getHelper(widget.token, userId);
+      final helper = await _fetchHelper();
       final earnings = await _earningsService.getEarningsStatistics(
         widget.token,
       );
-      final profileSummary = await _helperService.getHelperProfileSummary(
-        widget.token,
-        userId,
-      ); // THÊM
 
       if (mounted && !_isDisposed) {
         setState(() {
           _helper = helper;
           _earnings = earnings;
-          _profileSummary = profileSummary; // LƯU KẾT QUẢ
           _isLoading = false;
         });
       }
     } catch (e) {
-      print("Lỗi load data: $e");
       if (mounted && !_isDisposed) {
         setState(() => _isLoading = false);
       }
@@ -214,17 +199,17 @@ class _HelperHomeScreenState extends State<HelperHomeScreen> {
 
                   QuickStatsRow(
                     completedJobs: data?.completedBookings ?? 0,
-                    rating:
-                        _profileSummary?.data?.profile?.rating ?? 0.0, // TỪ API
-                    reviewCount:
-                        _profileSummary?.data?.profile?.reviewCount ??
-                        0, // TỪ API
+                    rating: 4.8,
                     pendingJobs: data?.totalBookings != null
                         ? (data!.totalBookings! - (data.completedBookings ?? 0))
                         : 0,
                   ),
 
                   const SizedBox(height: 20),
+
+                  _buildQuickActions(),
+
+                  const SizedBox(height: 80),
                 ],
               ),
             ),
@@ -336,6 +321,20 @@ class _HelperHomeScreenState extends State<HelperHomeScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildQuickActions() {
+    return Row(
+      children: [
+        Expanded(
+          child: _actionButton(Icons.work_outline, "Xem công việc", () {}),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _actionButton(Icons.calendar_today, "Lịch làm việc", () {}),
+        ),
+      ],
     );
   }
 
